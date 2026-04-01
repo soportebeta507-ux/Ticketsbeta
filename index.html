@@ -15,30 +15,42 @@
         #admin-modal { display: none; opacity: 0; transition: opacity 0.3s ease; }
         #admin-modal.active { display: flex; opacity: 1; }
         #logo-btn { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-        .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; }
+        
+        /* Animación de parpadeo suave para el estado */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .animate-blink { animation: blink 1.5s infinite; }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.5); }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
 
-    <div id="main-app" class="glass-card w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-10 border border-slate-200">
-        <header class="mb-10 flex justify-between items-end">
-            <div id="logo-btn" class="cursor-pointer active:scale-95 transition-transform">
-                <h1 class="text-3xl font-black text-blue-600 tracking-tighter italic">PRO-SERVICE</h1>
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em]">Support System</p>
-            </div>
-            <div class="flex flex-col items-end">
-                <div class="flex items-center space-x-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                    <div class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-[10px] font-black text-green-600 uppercase">Cloud Sync</span>
+    <div id="main-app" class="glass-card w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 md:p-10 border border-slate-200">
+        <header class="mb-8">
+            <div class="flex justify-between items-start mb-6">
+                <div id="logo-btn" class="cursor-pointer active:scale-95 transition-transform">
+                    <h1 class="text-3xl font-black text-blue-600 tracking-tighter italic">PRO-SERVICE</h1>
+                    <div class="flex items-center space-x-2 mt-1">
+                        <div class="h-2 w-2 rounded-full bg-green-500 animate-blink"></div>
+                        <span class="text-[10px] font-black text-green-600 uppercase tracking-widest">Conectado a la nube</span>
+                    </div>
+                </div>
+                <div class="flex flex-col items-end">
+                    <label class="text-[9px] font-black text-slate-400 uppercase mb-1 mr-1">Fecha de Atención</label>
+                    <input type="date" id="fecha_atencion" class="bg-slate-100 text-slate-700 font-bold text-xs p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                 </div>
             </div>
+            <hr class="border-slate-100">
         </header>
 
-        <form id="incidentForm" class="space-y-6">
+        <form id="incidentForm" class="space-y-5">
             <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-2 block">Personal a Cargo</label>
-                <select id="tecnico" required class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
-                    <option value="" disabled selected>Seleccione técnico...</option>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-2 block tracking-widest">Técnico Responsable</label>
+                <select id="tecnico" required class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 appearance-none font-medium text-slate-700">
+                    <option value="" disabled selected>Seleccione...</option>
                     <option>Adriel Aizpurua</option>
                     <option>Ellery Mendoza</option>
                     <option>Axel De Leon</option>
@@ -46,71 +58,75 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" id="cliente" list="list-cliente" required placeholder="Nombre del Cliente" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="text" id="sn_equipo" list="list-sn" required placeholder="S/N Equipo" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="space-y-1">
+                    <input type="text" id="cliente" list="list-cliente" required placeholder="Cliente" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                </div>
+                <div class="space-y-1">
+                    <input type="text" id="sn_equipo" list="list-sn" required placeholder="S/N Equipo" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                </div>
             </div>
 
-            <input type="text" id="abastecedor" list="list-abastecedor" placeholder="Abastecedor (Opcional)" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic placeholder:not-italic">
+            <input type="text" id="abastecedor" list="list-abastecedor" placeholder="Abastecedor (Opcional)" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 placeholder:not-italic">
             
-            <div class="bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
-                <p class="text-[10px] font-black text-blue-400 uppercase mb-4 text-center tracking-widest">Checklist de Falla</p>
+            <div class="bg-blue-50/40 p-6 rounded-[2rem] border border-blue-100/50">
+                <p class="text-[10px] font-black text-blue-500 uppercase mb-4 text-center tracking-[0.2em]">Checklist de Incidencias</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:bg-blue-50 transition-colors">
-                        <input type="checkbox" name="falla" value="Bolsa no Liberó" class="w-5 h-5 text-blue-600 rounded-lg">
-                        <span class="text-slate-600 text-sm font-bold uppercase">Bolsa no Liberó</span>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm transition-all">
+                        <input type="checkbox" name="falla" value="Bolsa no Liberó" class="w-5 h-5 text-blue-600 rounded-lg border-slate-300">
+                        <span class="text-slate-600 text-xs font-bold uppercase">Bolsa no Liberó</span>
                     </label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:bg-blue-50 transition-colors">
-                        <input type="checkbox" name="falla" value="CIT Caído" class="w-5 h-5 text-blue-600 rounded-lg">
-                        <span class="text-slate-600 text-sm font-bold uppercase">CIT Caído</span>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm transition-all">
+                        <input type="checkbox" name="falla" value="CIT Caído" class="w-5 h-5 text-blue-600 rounded-lg border-slate-300">
+                        <span class="text-slate-600 text-xs font-bold uppercase">CIT Caído</span>
                     </label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:bg-blue-50 transition-colors">
-                        <input type="checkbox" name="falla" value="Atasco" class="w-5 h-5 text-blue-600 rounded-lg">
-                        <span class="text-slate-600 text-sm font-bold uppercase">Atasco</span>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm transition-all">
+                        <input type="checkbox" name="falla" value="Atasco" class="w-5 h-5 text-blue-600 rounded-lg border-slate-300">
+                        <span class="text-slate-600 text-xs font-bold uppercase">Atasco</span>
                     </label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:bg-blue-50 transition-colors">
-                        <input type="checkbox" name="falla" value="Bolsa Llena" class="w-5 h-5 text-blue-600 rounded-lg">
-                        <span class="text-slate-600 text-sm font-bold uppercase">Bolsa Llena</span>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm transition-all">
+                        <input type="checkbox" name="falla" value="Bolsa Llena" class="w-5 h-5 text-blue-600 rounded-lg border-slate-300">
+                        <span class="text-slate-600 text-xs font-bold uppercase">Bolsa Llena</span>
                     </label>
                 </div>
-                <div class="px-1">
-                    <label class="flex items-center space-x-3 mb-2 cursor-pointer">
-                        <input type="checkbox" id="checkOtro" name="falla" value="Otro" class="w-5 h-5 text-orange-500 rounded-lg">
-                        <span class="text-slate-700 text-sm font-bold uppercase italic">Especificar otro error</span>
+                <div class="pt-2 border-t border-blue-100/50">
+                    <label class="flex items-center space-x-3 mb-2 cursor-pointer group">
+                        <input type="checkbox" id="checkOtro" name="falla" value="Otro" class="w-5 h-5 text-orange-500 rounded-lg border-slate-300">
+                        <span class="text-slate-500 group-hover:text-orange-600 text-[10px] font-black uppercase transition-colors">Otro error específico</span>
                     </label>
-                    <input type="text" id="detalleOtro" class="hidden w-full p-3 bg-white border-b-2 border-orange-400 rounded-lg outline-none text-sm" placeholder="Escriba la falla detallada aquí...">
+                    <input type="text" id="detalleOtro" class="hidden w-full p-3 bg-white border border-orange-200 rounded-xl outline-none text-sm shadow-inner" placeholder="Describa la falla técnica...">
                 </div>
             </div>
 
-            <textarea id="solucion" rows="3" required placeholder="Describa la solución aplicada..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+            <textarea id="solucion" rows="3" required placeholder="Solución técnica aplicada..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 resize-none font-medium"></textarea>
             
-            <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-200 active:scale-95 transition-all uppercase tracking-tighter">Guardar Registro</button>
+            <button type="submit" id="btnSubmit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-200 active:scale-[0.98] transition-all uppercase tracking-widest text-sm">Guardar Registro</button>
         </form>
     </div>
 
-    <div id="admin-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-5xl max-h-[95vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col">
-            <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-white">
+    <div id="admin-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-2 md:p-4">
+        <div class="bg-white w-full max-w-6xl max-h-[98vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
+            <div class="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0">
                 <div>
-                    <h2 class="text-3xl font-black text-slate-800 tracking-tighter italic">ADMIN <span class="text-blue-600">DASHBOARD</span></h2>
-                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Análisis y Reportes PDF</p>
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tighter italic">ADMIN <span class="text-blue-600">DASHBOARD</span></h2>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Control Maestro de Atenciones</p>
                 </div>
                 <button onclick="closeAdmin()" class="bg-slate-100 hover:bg-red-50 hover:text-red-500 p-3 rounded-full transition-all text-slate-400">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
 
-            <div class="p-8 overflow-y-auto flex-1 bg-slate-50">
+            <div class="p-4 md:p-8 overflow-y-auto flex-1 bg-slate-50">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                    <div class="stat-card p-6 rounded-[2rem] bg-white shadow-sm border border-slate-200">
-                        <label class="text-[10px] font-black text-slate-400 uppercase mb-3 block">Filtrar por Técnico</label>
-                        <select id="filter-tecnico" class="w-full p-3 bg-slate-100 rounded-xl outline-none border-none font-bold text-slate-700 mb-4">
+                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
+                        <label class="text-[10px] font-black text-slate-400 uppercase mb-3 block tracking-widest">Filtro de Personal</label>
+                        <select id="filter-tecnico" onchange="loadAdminData()" class="w-full p-3 bg-slate-100 rounded-xl outline-none border-none font-bold text-slate-700 mb-4 cursor-pointer">
                             <option value="Todos">Todos los Técnicos</option>
                             <option>Adriel Aizpurua</option>
                             <option>Ellery Mendoza</option>
                             <option>Axel De Leon</option>
                         </select>
-                        <button onclick="downloadPDF()" class="w-full bg-slate-800 text-white font-black py-4 rounded-xl hover:bg-black transition-all flex items-center justify-center space-x-2">
-                            <span>GENERAR PDF</span>
+                        <button onclick="downloadPDF()" class="w-full bg-slate-800 text-white font-black py-4 rounded-xl hover:bg-black transition-all text-xs tracking-widest">
+                            DESCARGAR PDF
                         </button>
                     </div>
                     <div class="lg:col-span-2 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 min-h-[250px]">
@@ -119,17 +135,20 @@
                 </div>
 
                 <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-50 text-slate-400 font-black uppercase text-[10px] tracking-widest border-b border-slate-100">
-                            <tr>
-                                <th class="p-5">Fecha</th>
-                                <th class="p-5">Técnico</th>
-                                <th class="p-5">Cliente</th>
-                                <th class="p-5">Falla</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body"></tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-800 text-white font-black uppercase text-[9px] tracking-[0.2em]">
+                                <tr>
+                                    <th class="p-5">Fecha Atención</th>
+                                    <th class="p-5">Hora Reg.</th>
+                                    <th class="p-5">Técnico</th>
+                                    <th class="p-5">Cliente</th>
+                                    <th class="p-5">Resumen Falla</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -148,21 +167,21 @@
         let pressTimer;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Lógica para el input "Otro"
+            // Fecha hoy automática
+            document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
+
             const checkOtro = document.getElementById('checkOtro');
             const detalleOtro = document.getElementById('detalleOtro');
             checkOtro.addEventListener('change', () => {
                 detalleOtro.classList.toggle('hidden', !checkOtro.checked);
-                detalleOtro.required = checkOtro.checked;
                 if(checkOtro.checked) detalleOtro.focus();
             });
 
-            // Lógica Long Press
             const logo = document.getElementById('logo-btn');
-            logo.addEventListener('mousedown', () => startTimer());
-            logo.addEventListener('touchstart', (e) => { startTimer(); });
-            logo.addEventListener('mouseup', () => clearTimer());
-            logo.addEventListener('touchend', () => clearTimer());
+            logo.addEventListener('mousedown', startTimer);
+            logo.addEventListener('touchstart', (e) => { e.preventDefault(); startTimer(); });
+            logo.addEventListener('mouseup', clearTimer);
+            logo.addEventListener('touchend', clearTimer);
 
             cargarSugerencias();
         });
@@ -170,9 +189,9 @@
         function startTimer() {
             clearTimer();
             pressTimer = setTimeout(() => {
-                const pass = prompt("Acceso Administrador (Contraseña):");
+                const pass = prompt("MODO ADMINISTRADOR\nIngrese contraseña:");
                 if(pass === "admin123") openAdmin();
-                else if(pass !== null) alert("Contraseña Incorrecta");
+                else if(pass !== null) alert("Error de acceso");
             }, 3000);
         }
 
@@ -188,18 +207,27 @@
         }
 
         async function loadAdminData() {
-            const { data } = await _supabase.from('incidencias').select('*').order('created_at', { ascending: false });
+            const filterTech = document.getElementById('filter-tecnico').value;
+            let query = _supabase.from('incidencias').select('*').order('created_at', { ascending: false });
+            if (filterTech !== "Todos") query = query.eq('tecnico', filterTech);
+
+            const { data } = await query;
             if(!data) return;
 
             const tbody = document.getElementById('table-body');
-            tbody.innerHTML = data.slice(0, 10).map(row => `
-                <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                    <td class="p-5 font-medium text-slate-400">${new Date(row.created_at).toLocaleDateString()}</td>
-                    <td class="p-5 font-bold text-slate-700">${row.tecnico}</td>
-                    <td class="p-5 text-slate-600">${row.cliente}</td>
-                    <td class="p-5 italic text-blue-500 truncate max-w-[150px]">${row.fallas.join(', ')}</td>
+            tbody.innerHTML = data.slice(0, 30).map(row => {
+                const h = new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const f = row.fecha_manual || new Date(row.created_at).toLocaleDateString();
+                return `
+                <tr class="hover:bg-slate-50 transition-colors text-slate-600 border-b border-slate-50">
+                    <td class="p-5 font-black text-blue-600 text-xs">${f}</td>
+                    <td class="p-5 text-slate-400 font-bold text-[10px]">${h}</td>
+                    <td class="p-5 font-bold text-slate-800">${row.tecnico}</td>
+                    <td class="p-5 font-medium text-slate-500 uppercase text-[10px]">${row.cliente}</td>
+                    <td class="p-5 italic text-slate-400 text-[10px] truncate max-w-[120px]">${row.fallas.join(', ')}</td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
 
             const counts = {};
             data.forEach(r => counts[r.tecnico] = (counts[r.tecnico] || 0) + 1);
@@ -211,32 +239,39 @@
                 data: {
                     labels: Object.keys(counts),
                     datasets: [{
-                        label: 'Atenciones',
+                        label: 'Tickets',
                         data: Object.values(counts),
                         backgroundColor: '#2563eb',
-                        borderRadius: 8
+                        borderRadius: 6
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                }
             });
         }
 
         async function downloadPDF() {
             const tech = document.getElementById('filter-tecnico').value;
-            let query = _supabase.from('incidencias').select('*');
-            if(tech !== "Todos") query = query.eq('tecnico', tech);
-            const { data } = await query;
-
+            const { data } = await _supabase.from('incidencias').select('*').eq(tech !== 'Todos' ? 'tecnico' : '', tech !== 'Todos' ? tech : '');
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.text("REPORTE DE ATENCIONES - PRO-SERVICE", 14, 20);
+            doc.setFontSize(16);
+            doc.text("REGISTRO TÉCNICO PRO-SERVICE PANAMA", 14, 20);
             doc.autoTable({
                 startY: 30,
-                head: [['Fecha', 'Técnico', 'Cliente', 'Fallas']],
-                body: data.map(r => [new Date(r.created_at).toLocaleDateString(), r.tecnico, r.cliente, r.fallas.join(", ")]),
-                headStyles: { fillColor: [37, 99, 235] }
+                head: [['Fecha Atn.', 'Hora Reg.', 'Técnico', 'Cliente', 'Fallas']],
+                body: data.map(r => [
+                    r.fecha_manual || new Date(r.created_at).toLocaleDateString(),
+                    new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    r.tecnico, r.cliente, r.fallas.join(", ")
+                ]),
+                headStyles: { fillColor: [30, 41, 59] }
             });
-            doc.save(`Reporte_${tech}.pdf`);
+            doc.save(`ProService_Report_${tech}.pdf`);
         }
 
         async function cargarSugerencias() {
@@ -255,11 +290,9 @@
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
-            btn.innerText = 'ENVIANDO...';
+            btn.innerText = 'SINCRONIZANDO...';
 
-            const checkOtro = document.getElementById('checkOtro');
             const detalleOtro = document.getElementById('detalleOtro');
-            
             const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked'))
                 .map(el => (el.value === 'Otro') ? `OTRO: ${detalleOtro.value}` : el.value);
 
@@ -269,16 +302,18 @@
                 sn_equipo: document.getElementById('sn_equipo').value.trim(),
                 abastecedor: document.getElementById('abastecedor').value.trim() || null,
                 fallas: fallas,
-                solucion: document.getElementById('solucion').value.trim()
+                solucion: document.getElementById('solucion').value.trim(),
+                fecha_manual: document.getElementById('fecha_atencion').value
             };
 
             const { error } = await _supabase.from('incidencias').insert([payload]);
             if(!error) {
-                alert("✓ Registro Exitoso");
+                alert("✓ Sincronización Completa");
                 e.target.reset();
+                document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
                 detalleOtro.classList.add('hidden');
             } else {
-                alert("Error de conexión");
+                alert("Error al conectar con Supabase");
             }
             btn.disabled = false;
             btn.innerText = 'GUARDAR REGISTRO';
