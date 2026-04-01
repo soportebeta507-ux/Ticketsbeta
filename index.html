@@ -6,203 +6,208 @@
     <title>Tech Log Cloud - Panama</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
-        .glass-card {
-            background: rgba(255, 255, 255, 0.98);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .glass-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .input-field {
-            @apply w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all;
-        }
+        .glass-card { background: rgba(255, 255, 255, 0.98); transition: all 0.3s ease; }
+        .admin-hidden { display: none; }
+        #logo-btn { cursor: pointer; user-select: none; -webkit-touch-callout: none; }
+        .modal-bg { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 md:p-10">
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
 
-    <div class="glass-card w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl p-8 border border-slate-100">
+    <div id="main-app" class="glass-card w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl p-8 border border-slate-100">
         <header class="mb-8 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-black text-blue-600 tracking-tight italic">PRO-SERVICE <span class="text-slate-400 font-light not-italic text-lg">v3.0</span></h1>
-                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Sincronización Inteligente</p>
+            <div id="logo-btn">
+                <h1 class="text-2xl font-black text-blue-600 tracking-tight italic">PRO-SERVICE</h1>
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Mantén presionado para Admin</p>
             </div>
-            <div id="conn-status" class="flex items-center space-x-2 bg-green-50 px-3 py-1 rounded-full">
-                <div class="h-2 w-2 rounded-full bg-green-500 animate-ping"></div>
-                <span class="text-[10px] font-bold text-green-600 uppercase">Online</span>
-            </div>
+            <div class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
         </header>
 
-        <form id="incidentForm" class="space-y-6">
-            <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-2">Técnico Responsable</label>
-                <select id="tecnico" required class="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
-                    <option value="" disabled selected>Seleccione técnico...</option>
+        <form id="incidentForm" class="space-y-5">
+            <select id="tecnico" required class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="" disabled selected>Técnico...</option>
+                <option>Adriel Aizpurua</option>
+                <option>Ellery Mendoza</option>
+                <option>Axel De Leon</option>
+            </select>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="cliente" list="list-cliente" required placeholder="Cliente" class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="sn_equipo" list="list-sn" required placeholder="S/N Equipo" class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <input type="text" id="abastecedor" list="list-abastecedor" placeholder="Abastecedor (Opcional)" class="w-full p-4 bg-slate-50 rounded-2xl outline-none italic">
+            
+            <div class="bg-slate-50 p-6 rounded-2xl">
+                <p class="text-xs font-bold text-slate-400 uppercase mb-4 text-center">Fallas</p>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <label class="flex items-center space-x-2"><input type="checkbox" name="falla" value="Bolsa no Liberó"> <span>Bolsa no Liberó</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" name="falla" value="CIT Caído"> <span>CIT Caído</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" name="falla" value="Atasco"> <span>Atasco</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" name="falla" value="Bolsa Llena"> <span>Bolsa Llena</span></label>
+                </div>
+            </div>
+
+            <textarea id="solucion" rows="3" required placeholder="Solución..." class="w-full p-4 bg-slate-50 rounded-2xl outline-none"></textarea>
+            
+            <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-bold py-5 rounded-2xl shadow-lg active:scale-95 transition-all">REGISTRAR</button>
+        </form>
+    </div>
+
+    <div id="admin-modal" class="admin-hidden fixed inset-0 modal-bg z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-y-auto p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight text-blue-600">Dashboard Administrativo</h2>
+                <button onclick="toggleAdmin()" class="text-slate-400 hover:text-red-500 font-bold text-xl">✕ Cerar</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 bg-slate-50 p-4 rounded-2xl">
+                <select id="filter-tecnico" class="p-3 rounded-xl border-none outline-none">
+                    <option value="Todos">Todos los Técnicos</option>
                     <option>Adriel Aizpurua</option>
                     <option>Ellery Mendoza</option>
                     <option>Axel De Leon</option>
                 </select>
+                <button onclick="downloadPDF()" class="bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition-all px-4 py-3">
+                    Generar Informe PDF
+                </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-2">Cliente</label>
-                    <input type="text" id="cliente" list="list-cliente" required placeholder="Nombre empresa/cliente"
-                        class="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-400 outline-none">
-                    <datalist id="list-cliente"></datalist>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-2">S/N Equipo (Filtrado)</label>
-                    <input type="text" id="sn_equipo" list="list-sn" required placeholder="Serie del equipo"
-                        class="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-400 outline-none">
-                    <datalist id="list-sn"></datalist>
-                </div>
+            <div class="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm mb-6">
+                <canvas id="statsChart" height="150"></canvas>
             </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-2">Abastecedor <span class="text-slate-300 font-medium">(Opcional)</span></label>
-                <input type="text" id="abastecedor" list="list-abastecedor" placeholder="Proveedor del equipo"
-                    class="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-400 outline-none italic placeholder:not-italic">
-                <datalist id="list-abastecedor"></datalist>
-            </div>
-
-            <div class="bg-slate-50 p-6 rounded-[1.5rem] border border-slate-100">
-                <span class="block text-[10px] font-black text-slate-400 mb-4 uppercase tracking-[0.2em] text-center">Razones de la Falla</span>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <label class="flex items-center space-x-3 p-3 bg-white hover:shadow-md rounded-xl cursor-pointer transition-all border border-slate-100">
-                        <input type="checkbox" name="falla" value="Bolsa no Liberó" class="w-5 h-5 text-blue-600 rounded-lg">
-                        <span class="text-slate-600 text-sm font-medium">Bolsa no Liberó</span>
-                    </label>
-                    <label class="flex items-center space-x-3 p-3 bg-white hover:shadow-md rounded-xl cursor-pointer transition-all border border-slate-100">
-                        <input type="checkbox" name="falla" value="proceso cit caido" class="w-5 h-5 text-blue-600 rounded-lg">
-                        <span class="text-slate-600 text-sm font-medium">Proceso CIT caído</span>
-                    </label>
-                    <label class="flex items-center space-x-3 p-3 bg-white hover:shadow-md rounded-xl cursor-pointer transition-all border border-slate-100">
-                        <input type="checkbox" name="falla" value="atasco" class="w-5 h-5 text-blue-600 rounded-lg">
-                        <span class="text-slate-700 text-sm font-medium">Atasco</span>
-                    </label>
-                    <label class="flex items-center space-x-3 p-3 bg-white hover:shadow-md rounded-xl cursor-pointer transition-all border border-slate-100">
-                        <input type="checkbox" name="falla" value="bolsa llena" class="w-5 h-5 text-blue-600 rounded-lg">
-                        <span class="text-slate-600 text-sm font-medium">Bolsa Llena</span>
-                    </label>
-                </div>
-                <div class="mt-4 px-1">
-                    <label class="flex items-center space-x-3 mb-2 cursor-pointer">
-                        <input type="checkbox" id="checkOtro" name="falla" value="Otro" class="w-5 h-5 text-orange-500 rounded-lg">
-                        <span class="text-slate-700 text-sm font-bold">Otro error específico</span>
-                    </label>
-                    <input type="text" id="detalleOtro" class="hidden w-full p-3 bg-white border-b-2 border-orange-400 rounded-lg outline-none" placeholder="Describa el error detalladamente...">
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-2">Solución Técnica Aplicada</label>
-                <textarea id="solucion" rows="3" required placeholder="¿Qué se hizo para corregir la falla?"
-                    class="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
-            </div>
-
-            <button type="submit" id="btnSubmit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-200 transition-all active:scale-95 uppercase tracking-tighter">
-                Registrar e Incidencia
-            </button>
-        </form>
+        </div>
     </div>
 
+    <datalist id="list-cliente"></datalist>
+    <datalist id="list-sn"></datalist>
+    <datalist id="list-abastecedor"></datalist>
+
     <script>
-        // Credenciales de Supabase
+        // Configuración Supabase
         const SUPABASE_URL = 'https://visznzzesyveymnlfbpp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpc3puenplc3l2ZXltbmxmYnBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDU4NTUsImV4cCI6MjA5MDU4MTg1NX0.FItuISXRPOJIXazRPKJbOl1MQ8n3P1McRauPX51nci8';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const clienteInput = document.getElementById('cliente');
-        const snInput = document.getElementById('sn_equipo');
+        let myChart = null;
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Carga inicial de sugerencias generales
-            await cargarSugerenciasBasicas();
+        // --- LÓGICA LONG PRESS (3 SEGUNDOS) ---
+        let pressTimer;
+        const logo = document.getElementById('logo-btn');
 
-            // Lógica para mostrar campo "Otro"
-            const checkOtro = document.getElementById('checkOtro');
-            const detalleOtro = document.getElementById('detalleOtro');
-            checkOtro.addEventListener('change', () => {
-                detalleOtro.classList.toggle('hidden', !checkOtro.checked);
-                detalleOtro.required = checkOtro.checked;
+        logo.addEventListener('mousedown', startPress);
+        logo.addEventListener('touchstart', startPress);
+        logo.addEventListener('mouseup', cancelPress);
+        logo.addEventListener('touchend', cancelPress);
+
+        function startPress() {
+            pressTimer = window.setTimeout(() => {
+                toggleAdmin();
+                loadStats();
+            }, 3000);
+        }
+        function cancelPress() { clearTimeout(pressTimer); }
+
+        function toggleAdmin() {
+            document.getElementById('admin-modal').classList.toggle('admin-hidden');
+        }
+
+        // --- ESTADÍSTICAS Y GRÁFICA ---
+        async function loadStats() {
+            const { data, error } = await _supabase.from('incidencias').select('tecnico');
+            if (error) return;
+
+            const counts = {};
+            data.forEach(row => counts[row.tecnico] = (counts[row.tecnico] || 0) + 1);
+
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            if (myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(counts),
+                    datasets: [{
+                        label: 'Atenciones por Técnico',
+                        data: Object.values(counts),
+                        backgroundColor: '#2563eb',
+                        borderRadius: 10
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+        }
+
+        // --- GENERAR PDF CON FILTROS ---
+        async function downloadPDF() {
+            const techFilter = document.getElementById('filter-tecnico').value;
+            let query = _supabase.from('incidencias').select('*');
+            
+            if (techFilter !== 'Todos') query = query.eq('tecnico', techFilter);
+
+            const { data, error } = await query;
+            if (error || !data) return alert("No hay datos para este filtro");
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(18);
+            doc.text('REPORTE TÉCNICO PRO-SERVICE', 14, 20);
+            doc.setFontSize(10);
+            doc.text(`Filtro: ${techFilter} | Fecha: ${new Date().toLocaleDateString()}`, 14, 28);
+
+            const tableData = data.map(row => [
+                new Date(row.created_at).toLocaleDateString(),
+                row.tecnico,
+                row.cliente,
+                row.sn_equipo,
+                row.fallas.join(', ')
+            ]);
+
+            doc.autoTable({
+                startY: 35,
+                head: [['Fecha', 'Técnico', 'Cliente', 'S/N', 'Fallas']],
+                body: tableData,
+                theme: 'striped',
+                headStyles: { fillColor: [37, 99, 235] }
             });
 
-            // --- FILTRADO INTELIGENTE DE S/N POR CLIENTE ---
-            clienteInput.addEventListener('input', async () => {
-                const clienteValue = clienteInput.value.trim();
-                
-                // Si el cliente existe en nuestra lista, filtramos los S/N
-                if (clienteValue.length > 2) {
-                    const { data, error } = await _supabase
-                        .from('incidencias')
-                        .select('sn_equipo')
-                        .eq('cliente', clienteValue);
+            doc.save(`Reporte_Tech_${techFilter}.pdf`);
+        }
 
-                    if (!error && data.length > 0) {
-                        const seriesUnicas = [...new Set(data.map(item => item.sn_equipo))].filter(Boolean);
-                        actualizarDatalist('list-sn', seriesUnicas);
-                    }
-                }
-            });
+        // --- LÓGICA DE REGISTRO (EXISTENTE) ---
+        document.getElementById('incidentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerText = 'GUARDANDO...';
 
-            // Manejo del Envío
-            document.getElementById('incidentForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const btn = document.getElementById('btnSubmit');
-                btn.disabled = true;
-                btn.innerText = 'PROCESANDO...';
+            const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => el.value);
+            
+            const payload = {
+                tecnico: document.getElementById('tecnico').value,
+                cliente: document.getElementById('cliente').value,
+                sn_equipo: document.getElementById('sn_equipo').value,
+                abastecedor: document.getElementById('abastecedor').value || null,
+                fallas: fallas,
+                solucion: document.getElementById('solucion').value
+            };
 
-                const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked'))
-                                    .map(el => el.value === 'Otro' ? `Otro: ${detalleOtro.value}` : el.value);
-
-                if (fallas.length === 0) {
-                    alert("Seleccione al menos una falla.");
-                    btn.disabled = false;
-                    btn.innerText = 'Registrar e Incidencia';
-                    return;
-                }
-
-                const payload = {
-                    tecnico: document.getElementById('tecnico').value,
-                    cliente: clienteInput.value.trim(),
-                    sn_equipo: snInput.value.trim(),
-                    abastecedor: document.getElementById('abastecedor').value.trim() || null,
-                    fallas: fallas,
-                    solucion: document.getElementById('solucion').value.trim()
-                };
-
-                const { error } = await _supabase.from('incidencias').insert([payload]);
-
-                if (error) {
-                    alert('Error: ' + error.message);
-                } else {
-                    alert('¡Éxito! Datos sincronizados correctamente.');
-                    e.target.reset();
-                    detalleOtro.classList.add('hidden');
-                    await cargarSugerenciasBasicas(); // Refrescar para el siguiente registro
-                }
-                btn.disabled = false;
-                btn.innerText = 'Registrar e Incidencia';
-            });
+            const { error } = await _supabase.from('incidencias').insert([payload]);
+            if (!error) {
+                alert("Sincronizado");
+                e.target.reset();
+            } else {
+                alert("Error: " + error.message);
+            }
+            btn.disabled = false;
+            btn.innerText = 'REGISTRAR';
         });
-
-        async function cargarSugerenciasBasicas() {
-            // Cargar Clientes y Abastecedores únicos
-            const tablas = ['cliente', 'abastecedor', 'sn_equipo'];
-            for (const col of tablas) {
-                const { data } = await _supabase.from('incidencias').select(col);
-                if (data) {
-                    const unicos = [...new Set(data.map(item => item[col]))].filter(Boolean);
-                    actualizarDatalist(`list-${col.replace('_', '')}`, unicos);
-                }
-            }
-        }
-
-        function actualizarDatalist(id, valores) {
-            const list = document.getElementById(id);
-            if (list) {
-                list.innerHTML = valores.map(v => `<option value="${v}">`).join('');
-            }
-        }
     </script>
 </body>
 </html>
