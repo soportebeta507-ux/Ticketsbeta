@@ -16,7 +16,6 @@
         #admin-modal.active { display: flex; opacity: 1; }
         #logo-btn { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
         
-        /* Animación de parpadeo suave para el estado */
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
@@ -24,6 +23,8 @@
         .animate-blink { animation: blink 1.5s infinite; }
         
         input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.5); }
+        .table-container::-webkit-scrollbar { height: 6px; }
+        .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
@@ -58,12 +59,8 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-1">
-                    <input type="text" id="cliente" list="list-cliente" required placeholder="Cliente" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium">
-                </div>
-                <div class="space-y-1">
-                    <input type="text" id="sn_equipo" list="list-sn" required placeholder="S/N Equipo" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium">
-                </div>
+                <input type="text" id="cliente" list="list-cliente" required placeholder="Cliente" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                <input type="text" id="sn_equipo" list="list-sn" required placeholder="S/N Equipo" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium">
             </div>
 
             <input type="text" id="abastecedor" list="list-abastecedor" placeholder="Abastecedor (Opcional)" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 placeholder:not-italic">
@@ -104,7 +101,7 @@
     </div>
 
     <div id="admin-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-2 md:p-4">
-        <div class="bg-white w-full max-w-6xl max-h-[98vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
+        <div class="bg-white w-full max-w-7xl max-h-[98vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
             <div class="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0">
                 <div>
                     <h2 class="text-2xl font-black text-slate-800 tracking-tighter italic">ADMIN <span class="text-blue-600">DASHBOARD</span></h2>
@@ -126,27 +123,27 @@
                             <option>Axel De Leon</option>
                         </select>
                         <button onclick="downloadPDF()" class="w-full bg-slate-800 text-white font-black py-4 rounded-xl hover:bg-black transition-all text-xs tracking-widest">
-                            DESCARGAR PDF
+                            DESCARGAR REPORTE PDF
                         </button>
                     </div>
-                    <div class="lg:col-span-2 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 min-h-[250px]">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 min-h-[200px]">
                         <canvas id="statsChart"></canvas>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
+                    <div class="overflow-x-auto table-container">
+                        <table class="w-full text-left text-sm min-w-[1000px]">
                             <thead class="bg-slate-800 text-white font-black uppercase text-[9px] tracking-[0.2em]">
                                 <tr>
-                                    <th class="p-5">Fecha Atención</th>
-                                    <th class="p-5">Hora Reg.</th>
+                                    <th class="p-5">Fecha</th>
                                     <th class="p-5">Técnico</th>
-                                    <th class="p-5">Cliente</th>
-                                    <th class="p-5">Resumen Falla</th>
+                                    <th class="p-5">Cliente / S/N</th>
+                                    <th class="p-5">Fallas Detectadas</th>
+                                    <th class="p-5">Solución Aplicada</th>
                                 </tr>
                             </thead>
-                            <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
+                            <tbody id="table-body" class="divide-y divide-slate-100 bg-white"></tbody>
                         </table>
                     </div>
                 </div>
@@ -167,9 +164,7 @@
         let pressTimer;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Fecha hoy automática
             document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
-
             const checkOtro = document.getElementById('checkOtro');
             const detalleOtro = document.getElementById('detalleOtro');
             checkOtro.addEventListener('change', () => {
@@ -192,7 +187,7 @@
                 const pass = prompt("MODO ADMINISTRADOR\nIngrese contraseña:");
                 if(pass === "admin123") openAdmin();
                 else if(pass !== null) alert("Error de acceso");
-            }, 3000);
+            }, 2000);
         }
 
         function clearTimer() { clearTimeout(pressTimer); }
@@ -202,9 +197,7 @@
             loadAdminData();
         }
 
-        function closeAdmin() {
-            document.getElementById('admin-modal').classList.remove('active');
-        }
+        function closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); }
 
         async function loadAdminData() {
             const filterTech = document.getElementById('filter-tecnico').value;
@@ -215,23 +208,35 @@
             if(!data) return;
 
             const tbody = document.getElementById('table-body');
-            tbody.innerHTML = data.slice(0, 30).map(row => {
-                const h = new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            tbody.innerHTML = data.map(row => {
                 const f = row.fecha_manual || new Date(row.created_at).toLocaleDateString();
                 return `
-                <tr class="hover:bg-slate-50 transition-colors text-slate-600 border-b border-slate-50">
+                <tr class="hover:bg-blue-50/30 transition-colors text-slate-600 border-b border-slate-50">
                     <td class="p-5 font-black text-blue-600 text-xs">${f}</td>
-                    <td class="p-5 text-slate-400 font-bold text-[10px]">${h}</td>
-                    <td class="p-5 font-bold text-slate-800">${row.tecnico}</td>
-                    <td class="p-5 font-medium text-slate-500 uppercase text-[10px]">${row.cliente}</td>
-                    <td class="p-5 italic text-slate-400 text-[10px] truncate max-w-[120px]">${row.fallas.join(', ')}</td>
+                    <td class="p-5 font-bold text-slate-800 text-xs">${row.tecnico}</td>
+                    <td class="p-5">
+                        <div class="font-black text-slate-700 uppercase text-[10px]">${row.cliente}</div>
+                        <div class="text-[9px] text-slate-400 font-bold">S/N: ${row.sn_equipo}</div>
+                    </td>
+                    <td class="p-5">
+                        <div class="flex flex-wrap gap-1">
+                            ${row.fallas.map(fall => `<span class="bg-blue-100 text-blue-700 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">${fall}</span>`).join('')}
+                        </div>
+                    </td>
+                    <td class="p-5">
+                        <p class="text-[11px] text-slate-600 leading-tight font-medium max-w-xs">${row.solucion}</p>
+                        ${row.abastecedor ? `<div class="mt-1 text-[9px] text-orange-500 font-black italic">ABASTECEDOR: ${row.abastecedor}</div>` : ''}
+                    </td>
                 </tr>
                 `;
             }).join('');
 
+            updateChart(data);
+        }
+
+        function updateChart(data) {
             const counts = {};
             data.forEach(r => counts[r.tecnico] = (counts[r.tecnico] || 0) + 1);
-
             const ctx = document.getElementById('statsChart').getContext('2d');
             if(myChart) myChart.destroy();
             myChart = new Chart(ctx, {
@@ -242,7 +247,7 @@
                         label: 'Tickets',
                         data: Object.values(counts),
                         backgroundColor: '#2563eb',
-                        borderRadius: 6
+                        borderRadius: 8
                     }]
                 },
                 options: { 
@@ -256,22 +261,35 @@
 
         async function downloadPDF() {
             const tech = document.getElementById('filter-tecnico').value;
-            const { data } = await _supabase.from('incidencias').select('*').eq(tech !== 'Todos' ? 'tecnico' : '', tech !== 'Todos' ? tech : '');
+            let query = _supabase.from('incidencias').select('*').order('created_at', { ascending: false });
+            if (tech !== 'Todos') query = query.eq('tecnico', tech);
+            
+            const { data } = await query;
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFontSize(16);
-            doc.text("REGISTRO TÉCNICO PRO-SERVICE PANAMA", 14, 20);
+            const doc = new jsPDF('l', 'mm', 'a4'); // Paisaje para mayor ancho
+
+            doc.setFontSize(18);
+            doc.setTextColor(37, 99, 235);
+            doc.text("REPORTE TÉCNICO PRO-SERVICE PANAMA", 14, 15);
+            
             doc.autoTable({
-                startY: 30,
-                head: [['Fecha Atn.', 'Hora Reg.', 'Técnico', 'Cliente', 'Fallas']],
+                startY: 25,
+                head: [['Fecha Atn.', 'Técnico', 'Cliente', 'S/N Equipo', 'Fallas', 'Solución Aplicada']],
                 body: data.map(r => [
                     r.fecha_manual || new Date(r.created_at).toLocaleDateString(),
-                    new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    r.tecnico, r.cliente, r.fallas.join(", ")
+                    r.tecnico, 
+                    r.cliente, 
+                    r.sn_equipo,
+                    r.fallas.join(", "),
+                    r.solucion
                 ]),
-                headStyles: { fillColor: [30, 41, 59] }
+                headStyles: { fillColor: [30, 41, 59], fontSize: 9, halign: 'center' },
+                styles: { fontSize: 8, cellPadding: 3 },
+                columnStyles: { 
+                    5: { cellWidth: 70 } // Columna de solución más ancha
+                }
             });
-            doc.save(`ProService_Report_${tech}.pdf`);
+            doc.save(`Reporte_ProService_${tech}_${new Date().toISOString().split('T')[0]}.pdf`);
         }
 
         async function cargarSugerencias() {
@@ -280,7 +298,8 @@
                 const { data } = await _supabase.from('incidencias').select(col);
                 if (data) {
                     const unicos = [...new Set(data.map(item => item[col]))].filter(Boolean);
-                    const list = document.getElementById(`list-${col.replace('_', '')}`);
+                    const listId = `list-${col.replace('_', '')}`;
+                    const list = document.getElementById(listId);
                     if(list) list.innerHTML = unicos.map(v => `<option value="${v}">`).join('');
                 }
             }
@@ -290,11 +309,18 @@
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
-            btn.innerText = 'SINCRONIZANDO...';
+            btn.innerText = 'GUARDANDO EN NUBE...';
 
             const detalleOtro = document.getElementById('detalleOtro');
             const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked'))
                 .map(el => (el.value === 'Otro') ? `OTRO: ${detalleOtro.value}` : el.value);
+
+            if(fallas.length === 0) {
+                alert("Seleccione al menos una falla");
+                btn.disabled = false;
+                btn.innerText = 'GUARDAR REGISTRO';
+                return;
+            }
 
             const payload = {
                 tecnico: document.getElementById('tecnico').value,
@@ -308,12 +334,13 @@
 
             const { error } = await _supabase.from('incidencias').insert([payload]);
             if(!error) {
-                alert("✓ Sincronización Completa");
+                alert("✓ Registro Guardado Exitosamente");
                 e.target.reset();
                 document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
                 detalleOtro.classList.add('hidden');
+                cargarSugerencias();
             } else {
-                alert("Error al conectar con Supabase");
+                alert("Error de conexión: " + error.message);
             }
             btn.disabled = false;
             btn.innerText = 'GUARDAR REGISTRO';
