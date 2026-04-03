@@ -113,20 +113,44 @@
             </div>
 
             <div class="p-4 md:p-8 overflow-y-auto flex-1 bg-slate-50">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
-                        <label class="text-[10px] font-black text-slate-400 uppercase mb-3 block tracking-widest">Filtro de Personal</label>
-                        <select id="filter-tecnico" onchange="loadAdminData()" class="w-full p-3 bg-slate-100 rounded-xl outline-none border-none font-bold text-slate-700 mb-4 cursor-pointer">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 space-y-4">
+                        <label class="text-[10px] font-black text-slate-400 uppercase block tracking-widest mb-2">Filtros de Reporte</label>
+                        
+                        <select id="filter-tecnico" onchange="loadAdminData()" class="w-full p-3 bg-slate-100 rounded-xl outline-none font-bold text-slate-700 text-xs">
                             <option value="Todos">Todos los Técnicos</option>
                             <option>Adriel Aizpurua</option>
                             <option>Ellery Mendoza</option>
                             <option>Axel De Leon</option>
                         </select>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[8px] font-black text-slate-400 uppercase ml-1">Inicio</label>
+                                <input type="date" id="filter-inicio" onchange="document.getElementById('filter-mes').value=''; loadAdminData()" class="w-full p-2 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-bold outline-none">
+                            </div>
+                            <div>
+                                <label class="text-[8px] font-black text-slate-400 uppercase ml-1">Fin</label>
+                                <input type="date" id="filter-fin" onchange="document.getElementById('filter-mes').value=''; loadAdminData()" class="w-full p-2 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-bold outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[8px] font-black text-slate-400 uppercase ml-1">O Seleccionar Mes</label>
+                            <input type="month" id="filter-mes" onchange="document.getElementById('filter-inicio').value=''; document.getElementById('filter-fin').value=''; loadAdminData()" class="w-full p-2 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-bold outline-none">
+                        </div>
+
+                        <div class="bg-blue-50 p-3 rounded-xl text-center border border-blue-100">
+                            <p class="text-[9px] font-black text-blue-400 uppercase">Encontrados</p>
+                            <span id="record-count" class="text-xl font-black text-blue-600">0</span>
+                        </div>
+
                         <button onclick="downloadPDF()" class="w-full bg-slate-800 text-white font-black py-4 rounded-xl hover:bg-black transition-all text-xs tracking-widest">
-                            DESCARGAR REPORTE PDF
+                            DESCARGAR PDF
                         </button>
                     </div>
-                    <div class="lg:col-span-2 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 min-h-[200px]">
+
+                    <div class="lg:col-span-3 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 min-h-[300px]">
                         <canvas id="statsChart"></canvas>
                     </div>
                 </div>
@@ -165,6 +189,8 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
+            
+            // Lógica "Otro Error"
             const checkOtro = document.getElementById('checkOtro');
             const detalleOtro = document.getElementById('detalleOtro');
             checkOtro.addEventListener('change', () => {
@@ -172,6 +198,7 @@
                 if(checkOtro.checked) detalleOtro.focus();
             });
 
+            // Acceso Admin (Long Press)
             const logo = document.getElementById('logo-btn');
             logo.addEventListener('mousedown', startTimer);
             logo.addEventListener('touchstart', (e) => { e.preventDefault(); startTimer(); });
@@ -201,11 +228,27 @@
 
         async function loadAdminData() {
             const filterTech = document.getElementById('filter-tecnico').value;
-            let query = _supabase.from('incidencias').select('*').order('created_at', { ascending: false });
-            if (filterTech !== "Todos") query = query.eq('tecnico', filterTech);
+            const fInicio = document.getElementById('filter-inicio').value;
+            const fFin = document.getElementById('filter-fin').value;
+            const fMes = document.getElementById('filter-mes').value;
 
-            const { data } = await query;
-            if(!data) return;
+            let query = _supabase.from('incidencias').select('*').order('fecha_manual', { ascending: false });
+
+            // Aplicar Filtros
+            if (filterTech !== "Todos") query = query.eq('tecnico', filterTech);
+            
+            if (fInicio && fFin) {
+                query = query.gte('fecha_manual', fInicio).lte('fecha_manual', fFin);
+            } else if (fMes) {
+                query = query.gte('fecha_manual', `${fMes}-01`).lte('fecha_manual', `${fMes}-31`);
+            }
+
+            const { data, error } = await query;
+            if(!data || error) return;
+
+            // Actualizar Contador y Gráfico
+            document.getElementById('record-count').innerText = data.length;
+            updateChart(data);
 
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = data.map(row => {
@@ -233,13 +276,11 @@
                     </td>
                     <td class="p-5">
                         <p class="text-[11px] text-slate-600 leading-tight font-medium max-w-xs">${row.solucion}</p>
-                        ${row.abastecedor ? `<div class="mt-1 text-[9px] text-orange-500 font-black italic">ABASTECEDOR: ${row.abastecedor}</div>` : ''}
+                        ${row.abastecedor ? `<div class="mt-1 text-[9px] text-orange-500 font-black italic uppercase">ABASTECEDOR: ${row.abastecedor}</div>` : ''}
                     </td>
                 </tr>
                 `;
             }).join('');
-
-            updateChart(data);
         }
 
         function updateChart(data) {
@@ -268,40 +309,42 @@
         }
 
         async function downloadPDF() {
-            const tech = document.getElementById('filter-tecnico').value;
-            let query = _supabase.from('incidencias').select('*').order('created_at', { ascending: false });
-            if (tech !== 'Todos') query = query.eq('tecnico', tech);
-            
-            const { data } = await query;
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
+            const filterTech = document.getElementById('filter-tecnico').value;
+            const fInicio = document.getElementById('filter-inicio').value;
+            const fFin = document.getElementById('filter-fin').value;
+            const fMes = document.getElementById('filter-mes').value;
 
-            doc.setFontSize(18);
+            let query = _supabase.from('incidencias').select('*').order('fecha_manual', { ascending: false });
+            if (filterTech !== "Todos") query = query.eq('tecnico', filterTech);
+            if (fInicio && fFin) query = query.gte('fecha_manual', fInicio).lte('fecha_manual', fFin);
+            else if (fMes) query = query.gte('fecha_manual', `${fMes}-01`).lte('fecha_manual', `${fMes}-31`);
+
+            const { data } = await query;
+
+            doc.setFontSize(16);
             doc.setTextColor(37, 99, 235);
-            doc.text("REPORTE BETA TICKET MANAGEMENT", 14, 15);
+            doc.text("BETA TICKET - REPORTE TÉCNICO", 14, 15);
+            doc.setFontSize(9);
+            doc.setTextColor(100);
+            doc.text(`Filtro: ${filterTech} | Registros: ${data.length}`, 14, 22);
             
             doc.autoTable({
-                startY: 25,
-                head: [['Fecha Atn. (Hora Reg.)', 'Técnico', 'Cliente', 'S/N Equipo', 'Fallas', 'Solución Aplicada']],
-                body: data.map(r => {
-                    const hora = new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-                    return [
-                        `${r.fecha_manual || 'N/A'}\n(${hora})`,
-                        r.tecnico, 
-                        r.cliente, 
-                        r.sn_equipo,
-                        r.fallas.join(", "),
-                        r.solucion
-                    ];
-                }),
-                headStyles: { fillColor: [30, 41, 59], fontSize: 9, halign: 'center' },
-                styles: { fontSize: 8, cellPadding: 3 },
-                columnStyles: { 
-                    0: { cellWidth: 35 },
-                    5: { cellWidth: 65 }
-                }
+                startY: 28,
+                head: [['Fecha', 'Técnico', 'Cliente', 'S/N Equipo', 'Fallas', 'Solución']],
+                body: data.map(r => [
+                    r.fecha_manual, 
+                    r.tecnico, 
+                    r.cliente, 
+                    r.sn_equipo,
+                    r.fallas.join(", "),
+                    r.solucion
+                ]),
+                headStyles: { fillColor: [30, 41, 59], fontSize: 8 },
+                styles: { fontSize: 7 }
             });
-            doc.save(`Reporte_BetaTicket_${tech}_${new Date().toISOString().split('T')[0]}.pdf`);
+            doc.save(`Reporte_BetaTicket_${new Date().toISOString().split('T')[0]}.pdf`);
         }
 
         async function cargarSugerencias() {
@@ -323,9 +366,9 @@
             btn.disabled = true;
             btn.innerText = 'GUARDANDO EN NUBE...';
 
-            const detalleOtro = document.getElementById('detalleOtro');
+            const detailOtro = document.getElementById('detalleOtro');
             const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked'))
-                .map(el => (el.value === 'Otro') ? `OTRO: ${detalleOtro.value}` : el.value);
+                .map(el => (el.value === 'Otro') ? `OTRO: ${detailOtro.value}` : el.value);
 
             if(fallas.length === 0) {
                 alert("Seleccione al menos una falla");
@@ -349,7 +392,7 @@
                 alert("✓ Registro Guardado Exitosamente");
                 e.target.reset();
                 document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
-                detalleOtro.classList.add('hidden');
+                detailOtro.classList.add('hidden');
                 cargarSugerencias();
             } else {
                 alert("Error de conexión: " + error.message);
