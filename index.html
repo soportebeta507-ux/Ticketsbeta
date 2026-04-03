@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tech Log Pro - Panama</title>
+    <title>Beta Ticket Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -33,10 +33,10 @@
         <header class="mb-8">
             <div class="flex justify-between items-start mb-6">
                 <div id="logo-btn" class="cursor-pointer active:scale-95 transition-transform">
-                    <h1 class="text-3xl font-black text-blue-600 tracking-tighter italic">PRO-SERVICE</h1>
+                    <h1 class="text-3xl font-black text-blue-600 tracking-tighter italic uppercase">Beta Ticket</h1>
                     <div class="flex items-center space-x-2 mt-1">
                         <div class="h-2 w-2 rounded-full bg-green-500 animate-blink"></div>
-                        <span class="text-[10px] font-black text-green-600 uppercase tracking-widest">Conectado a la nube</span>
+                        <span class="text-[10px] font-black text-green-600 uppercase tracking-widest">Management System</span>
                     </div>
                 </div>
                 <div class="flex flex-col items-end">
@@ -104,8 +104,8 @@
         <div class="bg-white w-full max-w-7xl max-h-[98vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
             <div class="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0">
                 <div>
-                    <h2 class="text-2xl font-black text-slate-800 tracking-tighter italic">ADMIN <span class="text-blue-600">DASHBOARD</span></h2>
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Control Maestro de Atenciones</p>
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tighter italic uppercase">Beta <span class="text-blue-600">Admin</span></h2>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Master Dashboard</p>
                 </div>
                 <button onclick="closeAdmin()" class="bg-slate-100 hover:bg-red-50 hover:text-red-500 p-3 rounded-full transition-all text-slate-400">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -266,11 +266,11 @@
             
             const { data } = await query;
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // Paisaje para mayor ancho
+            const doc = new jsPDF('l', 'mm', 'a4');
 
             doc.setFontSize(18);
             doc.setTextColor(37, 99, 235);
-            doc.text("REPORTE TÉCNICO PRO-SERVICE PANAMA", 14, 15);
+            doc.text("REPORTE BETA TICKET MANAGEMENT", 14, 15);
             
             doc.autoTable({
                 startY: 25,
@@ -286,10 +286,10 @@
                 headStyles: { fillColor: [30, 41, 59], fontSize: 9, halign: 'center' },
                 styles: { fontSize: 8, cellPadding: 3 },
                 columnStyles: { 
-                    5: { cellWidth: 70 } // Columna de solución más ancha
+                    5: { cellWidth: 70 }
                 }
             });
-            doc.save(`Reporte_ProService_${tech}_${new Date().toISOString().split('T')[0]}.pdf`);
+            doc.save(`Reporte_BetaTicket_${tech}_${new Date().toISOString().split('T')[0]}.pdf`);
         }
 
         async function cargarSugerencias() {
