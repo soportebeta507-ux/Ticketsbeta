@@ -136,7 +136,7 @@
                         <table class="w-full text-left text-sm min-w-[1000px]">
                             <thead class="bg-slate-800 text-white font-black uppercase text-[9px] tracking-[0.2em]">
                                 <tr>
-                                    <th class="p-5">Fecha</th>
+                                    <th class="p-5">Fecha / Hora</th>
                                     <th class="p-5">Técnico</th>
                                     <th class="p-5">Cliente / S/N</th>
                                     <th class="p-5">Fallas Detectadas</th>
@@ -209,10 +209,18 @@
 
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = data.map(row => {
-                const f = row.fecha_manual || new Date(row.created_at).toLocaleDateString();
+                const fAtn = row.fecha_manual || "N/A";
+                const hReg = new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                
                 return `
                 <tr class="hover:bg-blue-50/30 transition-colors text-slate-600 border-b border-slate-50">
-                    <td class="p-5 font-black text-blue-600 text-xs">${f}</td>
+                    <td class="p-5">
+                        <div class="font-black text-blue-600 text-xs uppercase">${fAtn}</div>
+                        <div class="text-[9px] text-slate-400 font-bold flex items-center mt-1">
+                            <svg class="w-2.5 h-2.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round"/></svg>
+                            REGISTRO: ${hReg}
+                        </div>
+                    </td>
                     <td class="p-5 font-bold text-slate-800 text-xs">${row.tecnico}</td>
                     <td class="p-5">
                         <div class="font-black text-slate-700 uppercase text-[10px]">${row.cliente}</div>
@@ -274,19 +282,23 @@
             
             doc.autoTable({
                 startY: 25,
-                head: [['Fecha Atn.', 'Técnico', 'Cliente', 'S/N Equipo', 'Fallas', 'Solución Aplicada']],
-                body: data.map(r => [
-                    r.fecha_manual || new Date(r.created_at).toLocaleDateString(),
-                    r.tecnico, 
-                    r.cliente, 
-                    r.sn_equipo,
-                    r.fallas.join(", "),
-                    r.solucion
-                ]),
+                head: [['Fecha Atn. (Hora Reg.)', 'Técnico', 'Cliente', 'S/N Equipo', 'Fallas', 'Solución Aplicada']],
+                body: data.map(r => {
+                    const hora = new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                    return [
+                        `${r.fecha_manual || 'N/A'}\n(${hora})`,
+                        r.tecnico, 
+                        r.cliente, 
+                        r.sn_equipo,
+                        r.fallas.join(", "),
+                        r.solucion
+                    ];
+                }),
                 headStyles: { fillColor: [30, 41, 59], fontSize: 9, halign: 'center' },
                 styles: { fontSize: 8, cellPadding: 3 },
                 columnStyles: { 
-                    5: { cellWidth: 70 }
+                    0: { cellWidth: 35 },
+                    5: { cellWidth: 65 }
                 }
             });
             doc.save(`Reporte_BetaTicket_${tech}_${new Date().toISOString().split('T')[0]}.pdf`);
