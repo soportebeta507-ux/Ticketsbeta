@@ -25,9 +25,50 @@
         input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.5); }
         .table-container::-webkit-scrollbar { height: 6px; }
         .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        /* --- SISTEMA DE TOASTS --- */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            min-width: 300px;
+            padding: 16px 20px;
+            border-radius: 1.5rem;
+            background: white;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #f1f5f9;
+            border-left: 6px solid #cbd5e1;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .toast.active { transform: translateX(0); }
+        .toast-success { border-left-color: #10b981; }
+        .toast-error { border-left-color: #ef4444; }
+        .toast-warning { border-left-color: #f59e0b; }
+
+        .toast-text {
+            font-size: 11px;
+            font-weight: 800;
+            color: #1e293b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <div id="toast-container"></div>
 
     <div id="main-app" class="glass-card w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 md:p-10 border border-slate-200">
         <header class="mb-8">
@@ -187,10 +228,33 @@
         let myChart = null;
         let pressTimer;
 
+        // --- FUNCIÓN DE NOTIFICACIONES ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '!';
+            const color = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-orange-500';
+
+            toast.innerHTML = `
+                <div class="h-6 w-6 rounded-full flex items-center justify-center text-white font-black text-[10px] ${color}">
+                    ${icon}
+                </div>
+                <span class="toast-text">${message}</span>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('active'), 10);
+            setTimeout(() => {
+                toast.classList.remove('active');
+                setTimeout(() => toast.remove(), 400);
+            }, 3500);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
             
-            // Lógica "Otro Error"
             const checkOtro = document.getElementById('checkOtro');
             const detalleOtro = document.getElementById('detalleOtro');
             checkOtro.addEventListener('change', () => {
@@ -198,7 +262,6 @@
                 if(checkOtro.checked) detalleOtro.focus();
             });
 
-            // Acceso Admin (Long Press)
             const logo = document.getElementById('logo-btn');
             logo.addEventListener('mousedown', startTimer);
             logo.addEventListener('touchstart', (e) => { e.preventDefault(); startTimer(); });
@@ -212,8 +275,12 @@
             clearTimer();
             pressTimer = setTimeout(() => {
                 const pass = prompt("MODO ADMINISTRADOR\nIngrese contraseña:");
-                if(pass === "admin123") openAdmin();
-                else if(pass !== null) alert("Error de acceso");
+                if(pass === "admin123") {
+                    openAdmin();
+                    showToast("Acceso Autorizado", "success");
+                } else if(pass !== null) {
+                    showToast("Acceso Denegado", "error");
+                }
             }, 2000);
         }
 
@@ -234,7 +301,6 @@
 
             let query = _supabase.from('incidencias').select('*').order('fecha_manual', { ascending: false });
 
-            // Aplicar Filtros
             if (filterTech !== "Todos") query = query.eq('tecnico', filterTech);
             
             if (fInicio && fFin) {
@@ -246,7 +312,6 @@
             const { data, error } = await query;
             if(!data || error) return;
 
-            // Actualizar Contador y Gráfico
             document.getElementById('record-count').innerText = data.length;
             updateChart(data);
 
@@ -260,7 +325,6 @@
                     <td class="p-5">
                         <div class="font-black text-blue-600 text-xs uppercase">${fAtn}</div>
                         <div class="text-[9px] text-slate-400 font-bold flex items-center mt-1">
-                            <svg class="w-2.5 h-2.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round"/></svg>
                             REGISTRO: ${hReg}
                         </div>
                     </td>
@@ -303,7 +367,7 @@
                     responsive: true, 
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                    scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
                 }
             });
         }
@@ -322,29 +386,20 @@
             else if (fMes) query = query.gte('fecha_manual', `${fMes}-01`).lte('fecha_manual', `${fMes}-31`);
 
             const { data } = await query;
+            if(!data || data.length === 0) return showToast("No hay datos para exportar", "warning");
 
             doc.setFontSize(16);
             doc.setTextColor(37, 99, 235);
             doc.text("BETA TICKET - REPORTE TÉCNICO", 14, 15);
-            doc.setFontSize(9);
-            doc.setTextColor(100);
-            doc.text(`Filtro: ${filterTech} | Registros: ${data.length}`, 14, 22);
-            
             doc.autoTable({
                 startY: 28,
                 head: [['Fecha', 'Técnico', 'Cliente', 'S/N Equipo', 'Fallas', 'Solución']],
-                body: data.map(r => [
-                    r.fecha_manual, 
-                    r.tecnico, 
-                    r.cliente, 
-                    r.sn_equipo,
-                    r.fallas.join(", "),
-                    r.solucion
-                ]),
+                body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.sn_equipo, r.fallas.join(", "), r.solucion]),
                 headStyles: { fillColor: [30, 41, 59], fontSize: 8 },
                 styles: { fontSize: 7 }
             });
-            doc.save(`Reporte_BetaTicket_${new Date().toISOString().split('T')[0]}.pdf`);
+            doc.save(`Reporte_Beta_${new Date().toISOString().split('T')[0]}.pdf`);
+            showToast("PDF Generado", "success");
         }
 
         async function cargarSugerencias() {
@@ -364,14 +419,14 @@
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
-            btn.innerText = 'GUARDANDO EN NUBE...';
+            btn.innerText = 'PROCESANDO...';
 
             const detailOtro = document.getElementById('detalleOtro');
             const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked'))
                 .map(el => (el.value === 'Otro') ? `OTRO: ${detailOtro.value}` : el.value);
 
             if(fallas.length === 0) {
-                alert("Seleccione al menos una falla");
+                showToast("Debes marcar al menos una falla", "warning");
                 btn.disabled = false;
                 btn.innerText = 'GUARDAR REGISTRO';
                 return;
@@ -389,13 +444,13 @@
 
             const { error } = await _supabase.from('incidencias').insert([payload]);
             if(!error) {
-                alert("✓ Registro Guardado Exitosamente");
+                showToast("Registro Guardado Exitosamente", "success");
                 e.target.reset();
                 document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
                 detailOtro.classList.add('hidden');
                 cargarSugerencias();
             } else {
-                alert("Error de conexión: " + error.message);
+                showToast("Error de Conexión: " + error.message, "error");
             }
             btn.disabled = false;
             btn.innerText = 'GUARDAR REGISTRO';
