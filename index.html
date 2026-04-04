@@ -19,7 +19,7 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         .animate-blink { animation: blink 1.5s infinite; }
         
-        /* Estilos PIN Corregidos */
+        /* Estilos PIN Estables */
         .pin-dot { width: 14px; height: 14px; border: 2px solid #cbd5e1; border-radius: 50%; transition: all 0.2s; }
         .pin-dot.filled { background: #2563eb; border-color: #2563eb; transform: scale(1.2); }
         .num-btn { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f8fafc; font-weight: 900; border: 1px solid #f1f5f9; cursor: pointer; }
@@ -33,22 +33,26 @@
         .toast-error { border-left-color: #ef4444; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4 font-sans">
 
     <div id="toast-container"></div>
 
     <div id="main-app" class="glass-card w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 border border-slate-200">
         <header class="mb-8">
             <div class="flex justify-between items-start mb-6">
-                <div id="logo-btn" class="cursor-pointer">
+                <div id="logo-btn" class="cursor-pointer active:scale-95 transition-transform">
                     <h1 class="text-3xl font-black text-blue-600 tracking-tighter italic uppercase">Beta Ticket</h1>
                     <div class="flex items-center space-x-2 mt-1">
                         <div class="h-2 w-2 rounded-full bg-green-500 animate-blink"></div>
                         <span class="text-[10px] font-black text-green-600 uppercase tracking-widest">Management System</span>
                     </div>
                 </div>
-                <input type="date" id="fecha_atencion" class="bg-slate-100 text-slate-700 font-bold text-xs p-2.5 rounded-xl border border-slate-200 outline-none">
+                <div class="flex flex-col items-end">
+                    <label class="text-[9px] font-black text-slate-400 uppercase mb-1">Fecha de Atención</label>
+                    <input type="date" id="fecha_atencion" class="bg-slate-100 text-slate-700 font-bold text-xs p-2.5 rounded-xl border border-slate-200 outline-none">
+                </div>
             </div>
+            <hr class="border-slate-100">
         </header>
 
         <form id="incidentForm" class="space-y-5">
@@ -64,15 +68,15 @@
                 <input type="text" id="sn_equipo" list="list-sn" required placeholder="S/N Equipo" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium">
             </div>
 
-            <input type="text" id="abastecedor" list="list-abastecedor" placeholder="Abastecedor (Opcional)" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 placeholder:not-italic">
+            <input type="text" id="abastecedor" list="list-abastecedor" placeholder="Abastecedor (Opcional)" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500">
             
             <div class="bg-blue-50/40 p-6 rounded-[2rem] border border-blue-100/50">
                 <p class="text-[10px] font-black text-blue-500 uppercase mb-4 text-center tracking-widest">Checklist de Incidencias</p>
                 <div class="grid grid-cols-2 gap-3 mb-4">
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer"><input type="checkbox" name="falla" value="Bolsa no Liberó" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa no Liberó</span></label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer"><input type="checkbox" name="falla" value="CIT Caído" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">CIT Caído</span></label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer"><input type="checkbox" name="falla" value="Atasco" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Atasco</span></label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer"><input type="checkbox" name="falla" value="Bolsa Llena" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa Llena</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm transition-all"><input type="checkbox" name="falla" value="Bolsa no Liberó" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa no Liberó</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm transition-all"><input type="checkbox" name="falla" value="CIT Caído" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">CIT Caído</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm transition-all"><input type="checkbox" name="falla" value="Atasco" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Atasco</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm transition-all"><input type="checkbox" name="falla" value="Bolsa Llena" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa Llena</span></label>
                 </div>
                 <label class="flex items-center space-x-3 mb-2 cursor-pointer"><input type="checkbox" id="checkOtro" name="falla" value="Otro" class="w-4 h-4 text-orange-500 rounded"><span class="text-slate-500 text-[10px] font-black uppercase">Otro error específico</span></label>
                 <input type="text" id="detalleOtro" class="hidden w-full p-3 bg-white border border-orange-200 rounded-xl outline-none text-sm" placeholder="Describa la falla...">
@@ -89,7 +93,7 @@
             <div class="flex justify-center gap-4 mb-8">
                 <div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div><div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div>
             </div>
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-3 gap-4 justify-items-center">
                 <button onclick="pressNum('1')" class="num-btn">1</button><button onclick="pressNum('2')" class="num-btn">2</button><button onclick="pressNum('3')" class="num-btn">3</button>
                 <button onclick="pressNum('4')" class="num-btn">4</button><button onclick="pressNum('5')" class="num-btn">5</button><button onclick="pressNum('6')" class="num-btn">6</button>
                 <button onclick="pressNum('7')" class="num-btn">7</button><button onclick="pressNum('8')" class="num-btn">8</button><button onclick="pressNum('9')" class="num-btn">9</button>
@@ -102,15 +106,15 @@
 
     <div id="admin-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-2 md:p-4">
         <div class="bg-white w-full max-w-7xl max-h-[95vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
-            <div class="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-white">
+            <div class="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0">
                 <h2 class="text-2xl font-black text-slate-800 tracking-tighter italic uppercase">Beta <span class="text-blue-600">Admin</span></h2>
-                <button onclick="closeAdmin()" class="bg-slate-100 p-3 rounded-full text-slate-400">✕</button>
+                <button onclick="closeAdmin()" class="bg-slate-100 p-3 rounded-full text-slate-400 hover:text-red-500 transition-colors">✕</button>
             </div>
 
             <div class="p-4 md:p-8 overflow-y-auto flex-1 bg-slate-50">
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-[2rem] border border-slate-200 space-y-4">
-                        <select id="filter-tecnico" onchange="loadAdminData()" class="w-full p-3 bg-slate-100 rounded-xl font-bold text-xs">
+                    <div class="bg-white p-6 rounded-[2rem] border border-slate-200 space-y-4 shadow-sm">
+                        <select id="filter-tecnico" onchange="loadAdminData()" class="w-full p-3 bg-slate-100 rounded-xl font-bold text-xs outline-none">
                             <option value="Todos">Todos los Técnicos</option>
                             <option>Adriel Aizpurua</option><option>Ellery Mendoza</option><option>Axel De Leon</option>
                         </select>
@@ -119,22 +123,22 @@
                             <input type="date" id="filter-fin" onchange="clearMonth(); loadAdminData()" class="w-full p-2 bg-slate-50 border rounded-lg text-[10px] font-bold">
                         </div>
                         <input type="month" id="filter-mes" onchange="clearDates(); loadAdminData()" class="w-full p-2 bg-slate-50 border rounded-lg text-[10px] font-bold">
-                        <div class="bg-blue-50 p-4 rounded-xl text-center">
+                        <div class="bg-blue-50 p-4 rounded-xl text-center border border-blue-100">
                             <span id="record-count" class="text-2xl font-black text-blue-600">0</span>
                             <p class="text-[9px] font-black text-blue-400 uppercase">Registros</p>
                         </div>
-                        <button onclick="downloadPDF()" class="w-full bg-slate-800 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest">Descargar PDF</button>
+                        <button onclick="downloadPDF()" class="w-full bg-slate-800 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest">Exportar PDF</button>
                     </div>
-                    <div class="lg:col-span-3 bg-white p-6 rounded-[2rem] border border-slate-200 min-h-[300px]">
+                    <div class="lg:col-span-3 bg-white p-6 rounded-[2rem] border border-slate-200 min-h-[300px] shadow-sm">
                         <canvas id="statsChart"></canvas>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm">
+                <div class="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm min-w-[900px]">
                             <thead class="bg-slate-800 text-white font-black uppercase text-[9px] tracking-widest">
-                                <tr><th class="p-5">Fecha</th><th class="p-5">Técnico</th><th class="p-5">Cliente / S/N</th><th class="p-5">Fallas</th><th class="p-5">Solución</th></tr>
+                                <tr><th class="p-5">Fecha / Hora</th><th class="p-5">Técnico</th><th class="p-5">Cliente / S/N</th><th class="p-5">Fallas</th><th class="p-5">Solución</th></tr>
                             </thead>
                             <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
                         </table>
@@ -166,7 +170,7 @@
             setTimeout(() => { t.classList.remove('active'); setTimeout(() => t.remove(), 400); }, 3000);
         }
 
-        // Lógica de apertura por logo
+        // --- PIN Logic ---
         const logo = document.getElementById('logo-btn');
         logo.addEventListener('mousedown', () => pressTimer = setTimeout(openPinModal, 2000));
         logo.addEventListener('mouseup', () => clearTimeout(pressTimer));
@@ -186,7 +190,7 @@
 
         function closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); }
 
-        // --- Lógica de Filtros Reparada ---
+        // --- Filtros ---
         function clearMonth() { document.getElementById('filter-mes').value = ""; }
         function clearDates() { document.getElementById('filter-inicio').value = ""; document.getElementById('filter-fin').value = ""; }
 
@@ -213,22 +217,28 @@
             updateChart(data || []);
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold uppercase text-xs">Sin registros</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold uppercase text-xs">Sin registros para el periodo</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = data.map(row => `
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="p-5 font-black text-blue-600 text-xs">${row.fecha_manual}</td>
+            tbody.innerHTML = data.map(row => {
+                const hora = row.created_at ? new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
+                return `
+                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
+                    <td class="p-5">
+                        <div class="font-black text-blue-600 text-xs">${row.fecha_manual}</div>
+                        <div class="text-[9px] font-bold text-slate-400 italic">${hora}</div>
+                    </td>
                     <td class="p-5 font-bold text-slate-700 text-xs">${row.tecnico}</td>
                     <td class="p-5">
                         <div class="font-black text-slate-800 text-[10px] uppercase">${row.cliente}</div>
                         <div class="text-[9px] text-slate-400 font-bold">S/N: ${row.sn_equipo}</div>
                         ${row.abastecedor ? `<span class="inline-block mt-1 bg-orange-100 text-orange-600 text-[8px] px-2 py-0.5 rounded-full font-black uppercase">Abastecedor: ${row.abastecedor}</span>` : ''}
                     </td>
-                    <td class="p-5"><div class="flex flex-wrap gap-1">${row.fallas.map(f => `<span class="bg-blue-50 text-blue-600 text-[9px] px-2 py-0.5 rounded font-bold">${f}</span>`).join('')}</div></td>
-                    <td class="p-5 text-[11px] font-medium text-slate-500 max-w-xs">${row.solucion}</td>
-                </tr>`).join('');
+                    <td class="p-5"><div class="flex flex-wrap gap-1">${row.fallas.map(f => `<span class="bg-blue-50 text-blue-600 text-[9px] px-2 py-0.5 rounded font-bold uppercase">${f}</span>`).join('')}</div></td>
+                    <td class="p-5 text-[11px] font-medium text-slate-500 max-w-xs leading-tight">${row.solucion}</td>
+                </tr>`;
+            }).join('');
         }
 
         function updateChart(data) {
@@ -245,12 +255,12 @@
         async function downloadPDF() {
             const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
             const { data } = await _supabase.from('incidencias').select('*').order('fecha_manual', {ascending: false});
-            doc.text("REPORTE BETA TICKET", 14, 15);
+            doc.text("REPORTE BETA TICKET - HISTORIAL", 14, 15);
             doc.autoTable({ head: [['Fecha', 'Técnico', 'Cliente', 'Fallas', 'Solución']], body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion]) });
-            doc.save("Reporte.pdf");
+            doc.save("Reporte_Beta.pdf");
         }
 
-        // --- Formulario ---
+        // --- Submit ---
         document.getElementById('incidentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = 'GUARDANDO...';
@@ -268,7 +278,7 @@
             };
 
             const { error } = await _supabase.from('incidencias').insert([payload]);
-            if(!error) { showToast("¡Registro Guardado!"); e.target.reset(); document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0]; }
+            if(!error) { showToast("¡Registro Exitoso!"); e.target.reset(); document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0]; }
             else { showToast("Error al guardar", "error"); }
             btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO';
         });
