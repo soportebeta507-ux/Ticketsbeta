@@ -19,14 +19,14 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         .animate-blink { animation: blink 1.5s infinite; }
         
-        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.5); }
+        input[type="date"], input[type="month"] { cursor: pointer; }
         .table-container::-webkit-scrollbar { height: 6px; }
         .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
         /* Estilos PIN */
         .pin-dot { width: 14px; height: 14px; border: 2px solid #cbd5e1; border-radius: 50%; transition: all 0.2s; }
         .pin-dot.filled { background: #2563eb; border-color: #2563eb; transform: scale(1.2); }
-        .num-btn { width: 65px; height: 65px; display: flex; items-center; justify-center; border-radius: 50%; background: #f8fafc; font-weight: 900; transition: all 0.1s; border: 1px solid #f1f5f9; }
+        .num-btn { width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f8fafc; font-weight: 900; transition: all 0.1s; border: 1px solid #f1f5f9; cursor: pointer; }
         .num-btn:active { background: #e2e8f0; transform: scale(0.9); }
 
         /* Toasts */
@@ -38,7 +38,7 @@
         .toast-warning { border-left-color: #f59e0b; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4 font-sans">
 
     <div id="toast-container"></div>
 
@@ -235,7 +235,7 @@
             setTimeout(() => { toast.classList.remove('active'); setTimeout(() => toast.remove(), 400); }, 3500);
         }
 
-        // Lógica de PIN y Logo
+        // --- Lógica de PIN y Logo ---
         const logo = document.getElementById('logo-btn');
         logo.addEventListener('mousedown', () => pressTimer = setTimeout(() => { currentPin = ""; updatePinDots(); document.getElementById('pin-modal').classList.add('active'); }, 2000));
         logo.addEventListener('mouseup', () => clearTimeout(pressTimer));
@@ -256,6 +256,7 @@
         function openAdmin() { document.getElementById('admin-modal').classList.add('active'); loadAdminData(); }
         function closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); }
 
+        // --- Dashboard y Filtros ---
         async function loadAdminData() {
             const tech = document.getElementById('filter-tecnico').value;
             const start = document.getElementById('filter-inicio').value;
@@ -263,14 +264,28 @@
             const month = document.getElementById('filter-mes').value;
 
             let query = _supabase.from('incidencias').select('*').order('fecha_manual', { ascending: false });
+            
             if (tech !== "Todos") query = query.eq('tecnico', tech);
-            if (start && end) query = query.gte('fecha_manual', start).lte('fecha_manual', end);
-            else if (month) query = query.gte('fecha_manual', `${month}-01`).lte('fecha_manual', `${month}-31`);
+            
+            if (start && end) {
+                query = query.gte('fecha_manual', start).lte('fecha_manual', end);
+            } else if (month) {
+                const [year, mNum] = month.split('-');
+                const firstDay = `${month}-01`;
+                const lastDayDate = new Date(year, mNum, 0); // día 0 del mes siguiente = último día mes actual
+                const lastDay = `${month}-${String(lastDayDate.getDate()).padStart(2, '0')}`;
+                query = query.gte('fecha_manual', firstDay).lte('fecha_manual', lastDay);
+            }
 
-            const { data } = await query;
-            if(!data) return;
+            const { data, error } = await query;
+            if(!data || error) {
+                document.getElementById('table-body').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">Error o no hay datos</td></tr>`;
+                return;
+            }
+
             document.getElementById('record-count').innerText = data.length;
             updateChart(data);
+            
             document.getElementById('table-body').innerHTML = data.map(row => `
                 <tr class="hover:bg-blue-50/30 transition-colors text-slate-600 border-b border-slate-50">
                     <td class="p-5"><div class="font-black text-blue-600 text-xs uppercase">${row.fecha_manual}</div></td>
@@ -291,18 +306,48 @@
             myChart = new Chart(ctx, {
                 type: 'bar',
                 data: { labels: Object.keys(counts), datasets: [{ label: 'Tickets', data: Object.values(counts), backgroundColor: '#2563eb', borderRadius: 8 }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: { 
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
             });
         }
 
         async function downloadPDF() {
-            const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
+            const { jsPDF } = window.jspdf; 
+            const doc = new jsPDF('l', 'mm', 'a4');
             const tech = document.getElementById('filter-tecnico').value;
-            const { data } = await _supabase.from('incidencias').select('*').eq(tech !== "Todos" ? 'tecnico' : '', tech).order('fecha_manual', {ascending: false});
-            doc.text("REPORTE TÉCNICO BETA TICKET", 14, 15);
-            doc.autoTable({ head: [['Fecha', 'Técnico', 'Cliente', 'Fallas', 'Solución']], body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion]), startY: 25 });
-            doc.save("Reporte_Beta.pdf");
-            showToast("PDF Descargado");
+            const start = document.getElementById('filter-inicio').value;
+            const end = document.getElementById('filter-fin').value;
+            const month = document.getElementById('filter-mes').value;
+
+            let query = _supabase.from('incidencias').select('*').order('fecha_manual', { ascending: false });
+            if (tech !== "Todos") query = query.eq('tecnico', tech);
+            if (start && end) query = query.gte('fecha_manual', start).lte('fecha_manual', end);
+            else if (month) {
+                const [year, mNum] = month.split('-');
+                const ld = new Date(year, mNum, 0).getDate();
+                query = query.gte('fecha_manual', `${month}-01`).lte('fecha_manual', `${month}-${ld}`);
+            }
+
+            const { data } = await query;
+            if(!data || data.length === 0) return showToast("Sin datos para exportar", "warning");
+
+            doc.setFontSize(16); doc.setTextColor(37, 99, 235);
+            doc.text("BETA TICKET - REPORTE TÉCNICO", 14, 15);
+            doc.autoTable({ 
+                head: [['Fecha', 'Técnico', 'Cliente', 'Fallas', 'Solución']], 
+                body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion]), 
+                startY: 25,
+                headStyles: { fillColor: [30, 41, 59] }
+            });
+            doc.save(`Reporte_Beta_${new Date().toISOString().split('T')[0]}.pdf`);
+            showToast("PDF Exportado");
         }
 
         async function cargarSugerencias() {
@@ -317,13 +362,14 @@
             }
         }
 
+        // --- Formulario Principal ---
         document.getElementById('incidentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = 'PROCESANDO...';
             const detailOtro = document.getElementById('detalleOtro');
             const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => (el.value === 'Otro') ? `OTRO: ${detailOtro.value}` : el.value);
 
-            if(fallas.length === 0) { showToast("Selecciona una falla", "warning"); btn.disabled = false; return; }
+            if(fallas.length === 0) { showToast("Selecciona una falla", "warning"); btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO'; return; }
 
             const payload = {
                 tecnico: document.getElementById('tecnico').value,
@@ -336,8 +382,15 @@
             };
 
             const { error } = await _supabase.from('incidencias').insert([payload]);
-            if(!error) { showToast("Registro Exitoso"); e.target.reset(); document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0]; cargarSugerencias(); }
-            else { showToast("Error de Red", "error"); }
+            if(!error) { 
+                showToast("Registro Guardado"); 
+                e.target.reset(); 
+                document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0]; 
+                document.getElementById('detalleOtro').classList.add('hidden');
+                cargarSugerencias(); 
+            } else { 
+                showToast("Error de Conexión", "error"); 
+            }
             btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO';
         });
 
