@@ -14,19 +14,15 @@
         .glass-card { background: white; transition: all 0.3s ease; }
         #admin-modal, #pin-modal { display: none; opacity: 0; transition: all 0.3s ease; z-index: 100; }
         #admin-modal.active, #pin-modal.active { display: flex; opacity: 1; }
-        #logo-btn { user-select: none; -webkit-user-select: none; }
+        #logo-btn { user-select: none; -webkit-user-select: none; touch-action: manipulation; }
         
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         .animate-blink { animation: blink 1.5s infinite; }
         
-        input[type="date"], input[type="month"] { cursor: pointer; }
-        .table-container::-webkit-scrollbar { height: 6px; }
-        .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-        /* Estilos PIN */
+        /* Estilos PIN Corregidos */
         .pin-dot { width: 14px; height: 14px; border: 2px solid #cbd5e1; border-radius: 50%; transition: all 0.2s; }
         .pin-dot.filled { background: #2563eb; border-color: #2563eb; transform: scale(1.2); }
-        .num-btn { width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f8fafc; font-weight: 900; transition: all 0.1s; border: 1px solid #f1f5f9; cursor: pointer; }
+        .num-btn { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f8fafc; font-weight: 900; border: 1px solid #f1f5f9; cursor: pointer; }
         .num-btn:active { background: #e2e8f0; transform: scale(0.9); }
 
         /* Toasts */
@@ -35,97 +31,65 @@
         .toast.active { transform: translateX(0); }
         .toast-success { border-left-color: #10b981; }
         .toast-error { border-left-color: #ef4444; }
-        .toast-warning { border-left-color: #f59e0b; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4 font-sans">
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
 
     <div id="toast-container"></div>
 
-    <div id="main-app" class="glass-card w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 md:p-10 border border-slate-200">
+    <div id="main-app" class="glass-card w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 border border-slate-200">
         <header class="mb-8">
             <div class="flex justify-between items-start mb-6">
-                <div id="logo-btn" class="cursor-pointer active:scale-95 transition-transform">
+                <div id="logo-btn" class="cursor-pointer">
                     <h1 class="text-3xl font-black text-blue-600 tracking-tighter italic uppercase">Beta Ticket</h1>
                     <div class="flex items-center space-x-2 mt-1">
                         <div class="h-2 w-2 rounded-full bg-green-500 animate-blink"></div>
                         <span class="text-[10px] font-black text-green-600 uppercase tracking-widest">Management System</span>
                     </div>
                 </div>
-                <div class="flex flex-col items-end">
-                    <label class="text-[9px] font-black text-slate-400 uppercase mb-1 mr-1">Fecha de Atención</label>
-                    <input type="date" id="fecha_atencion" class="bg-slate-100 text-slate-700 font-bold text-xs p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                </div>
+                <input type="date" id="fecha_atencion" class="bg-slate-100 text-slate-700 font-bold text-xs p-2.5 rounded-xl border border-slate-200 outline-none">
             </div>
-            <hr class="border-slate-100">
         </header>
 
         <form id="incidentForm" class="space-y-5">
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-2 block tracking-widest">Técnico Responsable</label>
-                <select id="tecnico" required class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 appearance-none font-medium text-slate-700">
-                    <option value="" disabled selected>Seleccione...</option>
-                    <option>Adriel Aizpurua</option>
-                    <option>Ellery Mendoza</option>
-                    <option>Axel De Leon</option>
-                </select>
-            </div>
+            <select id="tecnico" required class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium text-slate-700">
+                <option value="" disabled selected>Seleccione Técnico...</option>
+                <option>Adriel Aizpurua</option>
+                <option>Ellery Mendoza</option>
+                <option>Axel De Leon</option>
+            </select>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" id="cliente" list="list-cliente" required placeholder="Cliente" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium">
-                <input type="text" id="sn_equipo" list="list-sn" required placeholder="S/N Equipo" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                <input type="text" id="cliente" list="list-cliente" required placeholder="Cliente" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium">
+                <input type="text" id="sn_equipo" list="list-sn" required placeholder="S/N Equipo" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium">
             </div>
 
             <input type="text" id="abastecedor" list="list-abastecedor" placeholder="Abastecedor (Opcional)" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 placeholder:not-italic">
             
             <div class="bg-blue-50/40 p-6 rounded-[2rem] border border-blue-100/50">
-                <p class="text-[10px] font-black text-blue-500 uppercase mb-4 text-center tracking-[0.2em]">Checklist de Incidencias</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm transition-all">
-                        <input type="checkbox" name="falla" value="Bolsa no Liberó" class="w-5 h-5 text-blue-600 rounded-lg border-slate-300">
-                        <span class="text-slate-600 text-xs font-bold uppercase">Bolsa no Liberó</span>
-                    </label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm transition-all">
-                        <input type="checkbox" name="falla" value="CIT Caído" class="w-5 h-5 text-blue-600 rounded-lg border-slate-300">
-                        <span class="text-slate-600 text-xs font-bold uppercase">CIT Caído</span>
-                    </label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm transition-all">
-                        <input type="checkbox" name="falla" value="Atasco" class="w-5 h-5 text-blue-600 rounded-lg border-slate-300">
-                        <span class="text-slate-600 text-xs font-bold uppercase">Atasco</span>
-                    </label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm transition-all">
-                        <input type="checkbox" name="falla" value="Bolsa Llena" class="w-5 h-5 text-blue-600 rounded-lg border-slate-300">
-                        <span class="text-slate-600 text-xs font-bold uppercase">Bolsa Llena</span>
-                    </label>
+                <p class="text-[10px] font-black text-blue-500 uppercase mb-4 text-center tracking-widest">Checklist de Incidencias</p>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer"><input type="checkbox" name="falla" value="Bolsa no Liberó" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa no Liberó</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer"><input type="checkbox" name="falla" value="CIT Caído" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">CIT Caído</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer"><input type="checkbox" name="falla" value="Atasco" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Atasco</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer"><input type="checkbox" name="falla" value="Bolsa Llena" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa Llena</span></label>
                 </div>
-                <div class="pt-2 border-t border-blue-100/50">
-                    <label class="flex items-center space-x-3 mb-2 cursor-pointer group">
-                        <input type="checkbox" id="checkOtro" name="falla" value="Otro" class="w-5 h-5 text-orange-500 rounded-lg border-slate-300">
-                        <span class="text-slate-500 group-hover:text-orange-600 text-[10px] font-black uppercase transition-colors">Otro error específico</span>
-                    </label>
-                    <input type="text" id="detalleOtro" class="hidden w-full p-3 bg-white border border-orange-200 rounded-xl outline-none text-sm shadow-inner" placeholder="Describa la falla técnica...">
-                </div>
+                <label class="flex items-center space-x-3 mb-2 cursor-pointer"><input type="checkbox" id="checkOtro" name="falla" value="Otro" class="w-4 h-4 text-orange-500 rounded"><span class="text-slate-500 text-[10px] font-black uppercase">Otro error específico</span></label>
+                <input type="text" id="detalleOtro" class="hidden w-full p-3 bg-white border border-orange-200 rounded-xl outline-none text-sm" placeholder="Describa la falla...">
             </div>
 
-            <textarea id="solucion" rows="3" required placeholder="Solución técnica aplicada..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 resize-none font-medium"></textarea>
-            
-            <button type="submit" id="btnSubmit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-200 active:scale-[0.98] transition-all uppercase tracking-widest text-sm">Guardar Registro</button>
+            <textarea id="solucion" rows="3" required placeholder="Solución técnica aplicada..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none resize-none font-medium"></textarea>
+            <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase tracking-widest text-sm active:scale-95 transition-all">Guardar Registro</button>
         </form>
     </div>
 
-    <div id="pin-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-xs text-center border border-slate-100">
-            <div class="mb-6">
-                <div class="bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                </div>
-                <h3 class="text-xl font-black text-slate-800 uppercase tracking-tighter">Acceso Admin</h3>
-                <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Ingrese el código PIN</p>
-            </div>
+    <div id="pin-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-[3rem] shadow-2xl w-[320px] text-center border border-slate-100">
+            <h3 class="text-xl font-black text-slate-800 uppercase tracking-tighter mb-6">Acceso Admin</h3>
             <div class="flex justify-center gap-4 mb-8">
                 <div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div><div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div>
             </div>
-            <div class="grid grid-cols-3 gap-4 justify-items-center">
+            <div class="grid grid-cols-3 gap-4">
                 <button onclick="pressNum('1')" class="num-btn">1</button><button onclick="pressNum('2')" class="num-btn">2</button><button onclick="pressNum('3')" class="num-btn">3</button>
                 <button onclick="pressNum('4')" class="num-btn">4</button><button onclick="pressNum('5')" class="num-btn">5</button><button onclick="pressNum('6')" class="num-btn">6</button>
                 <button onclick="pressNum('7')" class="num-btn">7</button><button onclick="pressNum('8')" class="num-btn">8</button><button onclick="pressNum('9')" class="num-btn">9</button>
@@ -136,72 +100,43 @@
         </div>
     </div>
 
-    <div id="admin-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[150] flex items-center justify-center p-2 md:p-4">
-        <div class="bg-white w-full max-w-7xl max-h-[98vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
-            <div class="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0">
-                <div>
-                    <h2 class="text-2xl font-black text-slate-800 tracking-tighter italic uppercase">Beta <span class="text-blue-600">Admin</span></h2>
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Master Dashboard</p>
-                </div>
-                <button onclick="closeAdmin()" class="bg-slate-100 hover:bg-red-50 hover:text-red-500 p-3 rounded-full transition-all text-slate-400">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+    <div id="admin-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-2 md:p-4">
+        <div class="bg-white w-full max-w-7xl max-h-[95vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
+            <div class="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-white">
+                <h2 class="text-2xl font-black text-slate-800 tracking-tighter italic uppercase">Beta <span class="text-blue-600">Admin</span></h2>
+                <button onclick="closeAdmin()" class="bg-slate-100 p-3 rounded-full text-slate-400">✕</button>
             </div>
 
             <div class="p-4 md:p-8 overflow-y-auto flex-1 bg-slate-50">
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 space-y-4">
-                        <label class="text-[10px] font-black text-slate-400 uppercase block tracking-widest mb-2">Filtros de Reporte</label>
-                        
-                        <select id="filter-tecnico" onchange="loadAdminData()" class="w-full p-3 bg-slate-100 rounded-xl outline-none font-bold text-slate-700 text-xs">
+                    <div class="bg-white p-6 rounded-[2rem] border border-slate-200 space-y-4">
+                        <select id="filter-tecnico" onchange="loadAdminData()" class="w-full p-3 bg-slate-100 rounded-xl font-bold text-xs">
                             <option value="Todos">Todos los Técnicos</option>
-                            <option>Adriel Aizpurua</option>
-                            <option>Ellery Mendoza</option>
-                            <option>Axel De Leon</option>
+                            <option>Adriel Aizpurua</option><option>Ellery Mendoza</option><option>Axel De Leon</option>
                         </select>
-
                         <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="text-[8px] font-black text-slate-400 uppercase ml-1">Inicio</label>
-                                <input type="date" id="filter-inicio" onchange="document.getElementById('filter-mes').value=''; loadAdminData()" class="w-full p-2 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-bold outline-none">
-                            </div>
-                            <div>
-                                <label class="text-[8px] font-black text-slate-400 uppercase ml-1">Fin</label>
-                                <input type="date" id="filter-fin" onchange="document.getElementById('filter-mes').value=''; loadAdminData()" class="w-full p-2 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-bold outline-none">
-                            </div>
+                            <input type="date" id="filter-inicio" onchange="clearMonth(); loadAdminData()" class="w-full p-2 bg-slate-50 border rounded-lg text-[10px] font-bold">
+                            <input type="date" id="filter-fin" onchange="clearMonth(); loadAdminData()" class="w-full p-2 bg-slate-50 border rounded-lg text-[10px] font-bold">
                         </div>
-
-                        <div>
-                            <label class="text-[8px] font-black text-slate-400 uppercase ml-1">O Seleccionar Mes</label>
-                            <input type="month" id="filter-mes" onchange="document.getElementById('filter-inicio').value=''; document.getElementById('filter-fin').value=''; loadAdminData()" class="w-full p-2 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-bold outline-none">
+                        <input type="month" id="filter-mes" onchange="clearDates(); loadAdminData()" class="w-full p-2 bg-slate-50 border rounded-lg text-[10px] font-bold">
+                        <div class="bg-blue-50 p-4 rounded-xl text-center">
+                            <span id="record-count" class="text-2xl font-black text-blue-600">0</span>
+                            <p class="text-[9px] font-black text-blue-400 uppercase">Registros</p>
                         </div>
-
-                        <div class="bg-blue-50 p-3 rounded-xl text-center border border-blue-100">
-                            <p class="text-[9px] font-black text-blue-400 uppercase">Encontrados</p>
-                            <span id="record-count" class="text-xl font-black text-blue-600">0</span>
-                        </div>
-
-                        <button onclick="downloadPDF()" class="w-full bg-slate-800 text-white font-black py-4 rounded-xl hover:bg-black transition-all text-xs tracking-widest">DESCARGAR PDF</button>
+                        <button onclick="downloadPDF()" class="w-full bg-slate-800 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest">Descargar PDF</button>
                     </div>
-
-                    <div class="lg:col-span-3 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 min-h-[300px]">
+                    <div class="lg:col-span-3 bg-white p-6 rounded-[2rem] border border-slate-200 min-h-[300px]">
                         <canvas id="statsChart"></canvas>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto table-container">
-                        <table class="w-full text-left text-sm min-w-[1000px]">
-                            <thead class="bg-slate-800 text-white font-black uppercase text-[9px] tracking-[0.2em]">
-                                <tr>
-                                    <th class="p-5">Fecha / Hora</th>
-                                    <th class="p-5">Técnico</th>
-                                    <th class="p-5">Cliente / S/N</th>
-                                    <th class="p-5">Fallas Detectadas</th>
-                                    <th class="p-5">Solución Aplicada</th>
-                                </tr>
+                <div class="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm min-w-[900px]">
+                            <thead class="bg-slate-800 text-white font-black uppercase text-[9px] tracking-widest">
+                                <tr><th class="p-5">Fecha</th><th class="p-5">Técnico</th><th class="p-5">Cliente / S/N</th><th class="p-5">Fallas</th><th class="p-5">Solución</th></tr>
                             </thead>
-                            <tbody id="table-body" class="divide-y divide-slate-100 bg-white"></tbody>
+                            <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                 </div>
@@ -209,9 +144,7 @@
         </div>
     </div>
 
-    <datalist id="list-cliente"></datalist>
-    <datalist id="list-sn"></datalist>
-    <datalist id="list-abastecedor"></datalist>
+    <datalist id="list-cliente"></datalist><datalist id="list-sn"></datalist><datalist id="list-abastecedor"></datalist>
 
     <script>
         const SUPABASE_URL = 'https://visznzzesyveymnlfbpp.supabase.co';
@@ -223,40 +156,40 @@
         let currentPin = "";
         const MASTER_PIN = "1234";
 
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '!';
-            const color = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-orange-500';
-            toast.innerHTML = `<div class="h-6 w-6 rounded-full flex items-center justify-center text-white font-black text-[10px] ${color}">${icon}</div><span class="font-black text-[10px] text-slate-800 uppercase tracking-widest">${message}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.add('active'), 10);
-            setTimeout(() => { toast.classList.remove('active'); setTimeout(() => toast.remove(), 400); }, 3500);
+        function showToast(msg, type = 'success') {
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = `toast toast-${type}`;
+            t.innerHTML = `<span class="font-black text-[10px] uppercase tracking-widest">${msg}</span>`;
+            c.appendChild(t);
+            setTimeout(() => t.classList.add('active'), 10);
+            setTimeout(() => { t.classList.remove('active'); setTimeout(() => t.remove(), 400); }, 3000);
         }
 
-        // --- Lógica de PIN y Logo ---
+        // Lógica de apertura por logo
         const logo = document.getElementById('logo-btn');
-        logo.addEventListener('mousedown', () => pressTimer = setTimeout(() => { currentPin = ""; updatePinDots(); document.getElementById('pin-modal').classList.add('active'); }, 2000));
+        logo.addEventListener('mousedown', () => pressTimer = setTimeout(openPinModal, 2000));
         logo.addEventListener('mouseup', () => clearTimeout(pressTimer));
-        logo.addEventListener('touchstart', (e) => { e.preventDefault(); pressTimer = setTimeout(() => { currentPin = ""; updatePinDots(); document.getElementById('pin-modal').classList.add('active'); }, 2000); });
+        logo.addEventListener('touchstart', (e) => { pressTimer = setTimeout(openPinModal, 2000); });
         logo.addEventListener('touchend', () => clearTimeout(pressTimer));
 
-        function pressNum(n) { 
-            if(currentPin.length < 4) { currentPin += n; updatePinDots(); if(currentPin.length === 4) setTimeout(validatePin, 300); }
-        }
+        function openPinModal() { currentPin = ""; updatePinDots(); document.getElementById('pin-modal').classList.add('active'); }
+        function closePin() { document.getElementById('pin-modal').classList.remove('active'); }
+        function pressNum(n) { if(currentPin.length < 4) { currentPin += n; updatePinDots(); if(currentPin.length === 4) setTimeout(validatePin, 200); } }
         function updatePinDots() { for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).classList.toggle('filled', i < currentPin.length); }
         function clearPin() { currentPin = ""; updatePinDots(); }
-        function closePin() { document.getElementById('pin-modal').classList.remove('active'); }
+
         function validatePin() {
-            if(currentPin === MASTER_PIN) { closePin(); openAdmin(); showToast("Acceso Concedido", "success"); }
+            if(currentPin === MASTER_PIN) { closePin(); document.getElementById('admin-modal').classList.add('active'); loadAdminData(); }
             else { showToast("PIN Incorrecto", "error"); clearPin(); }
         }
 
-        function openAdmin() { document.getElementById('admin-modal').classList.add('active'); loadAdminData(); }
         function closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); }
 
-        // --- Dashboard y Filtros ---
+        // --- Lógica de Filtros Reparada ---
+        function clearMonth() { document.getElementById('filter-mes').value = ""; }
+        function clearDates() { document.getElementById('filter-inicio').value = ""; document.getElementById('filter-fin').value = ""; }
+
         async function loadAdminData() {
             const tech = document.getElementById('filter-tecnico').value;
             const start = document.getElementById('filter-inicio').value;
@@ -264,112 +197,65 @@
             const month = document.getElementById('filter-mes').value;
 
             let query = _supabase.from('incidencias').select('*').order('fecha_manual', { ascending: false });
-            
             if (tech !== "Todos") query = query.eq('tecnico', tech);
-            
+
             if (start && end) {
                 query = query.gte('fecha_manual', start).lte('fecha_manual', end);
             } else if (month) {
                 const [year, mNum] = month.split('-');
-                const firstDay = `${month}-01`;
-                const lastDayDate = new Date(year, mNum, 0); // día 0 del mes siguiente = último día mes actual
-                const lastDay = `${month}-${String(lastDayDate.getDate()).padStart(2, '0')}`;
-                query = query.gte('fecha_manual', firstDay).lte('fecha_manual', lastDay);
+                const lastDay = new Date(year, mNum, 0).getDate();
+                query = query.gte('fecha_manual', `${month}-01`).lte('fecha_manual', `${month}-${lastDay}`);
             }
 
-            const { data, error } = await query;
-            if(!data || error) {
-                document.getElementById('table-body').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">Error o no hay datos</td></tr>`;
+            const { data } = await query;
+            const tbody = document.getElementById('table-body');
+            document.getElementById('record-count').innerText = data ? data.length : 0;
+            updateChart(data || []);
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold uppercase text-xs">Sin registros</td></tr>`;
                 return;
             }
 
-            document.getElementById('record-count').innerText = data.length;
-            updateChart(data);
-            
-            document.getElementById('table-body').innerHTML = data.map(row => `
-                <tr class="hover:bg-blue-50/30 transition-colors text-slate-600 border-b border-slate-50">
-                    <td class="p-5"><div class="font-black text-blue-600 text-xs uppercase">${row.fecha_manual}</div></td>
-                    <td class="p-5 font-bold text-slate-800 text-xs">${row.tecnico}</td>
+            tbody.innerHTML = data.map(row => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-5 font-black text-blue-600 text-xs">${row.fecha_manual}</td>
+                    <td class="p-5 font-bold text-slate-700 text-xs">${row.tecnico}</td>
                     <td class="p-5">
-                        <div class="font-black text-slate-700 uppercase text-[10px]">${row.cliente}</div>
+                        <div class="font-black text-slate-800 text-[10px] uppercase">${row.cliente}</div>
                         <div class="text-[9px] text-slate-400 font-bold">S/N: ${row.sn_equipo}</div>
+                        ${row.abastecedor ? `<span class="inline-block mt-1 bg-orange-100 text-orange-600 text-[8px] px-2 py-0.5 rounded-full font-black uppercase">Abastecedor: ${row.abastecedor}</span>` : ''}
                     </td>
-                    <td class="p-5"><div class="flex flex-wrap gap-1">${row.fallas.map(f => `<span class="bg-blue-100 text-blue-700 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">${f}</span>`).join('')}</div></td>
-                    <td class="p-5 font-medium text-[11px] leading-tight max-w-xs">${row.solucion}</td>
+                    <td class="p-5"><div class="flex flex-wrap gap-1">${row.fallas.map(f => `<span class="bg-blue-50 text-blue-600 text-[9px] px-2 py-0.5 rounded font-bold">${f}</span>`).join('')}</div></td>
+                    <td class="p-5 text-[11px] font-medium text-slate-500 max-w-xs">${row.solucion}</td>
                 </tr>`).join('');
         }
 
         function updateChart(data) {
-            const counts = {}; data.forEach(r => counts[r.tecnico] = (counts[r.tecnico] || 0) + 1);
             const ctx = document.getElementById('statsChart').getContext('2d');
+            const counts = {}; data.forEach(r => counts[r.tecnico] = (counts[r.tecnico] || 0) + 1);
             if(myChart) myChart.destroy();
             myChart = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: Object.keys(counts), datasets: [{ label: 'Tickets', data: Object.values(counts), backgroundColor: '#2563eb', borderRadius: 8 }] },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    scales: { 
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                        x: { grid: { display: false } }
-                    },
-                    plugins: { legend: { display: false } }
-                }
+                data: { labels: Object.keys(counts), datasets: [{ label: 'Tickets', data: Object.values(counts), backgroundColor: '#2563eb', borderRadius: 10 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
         }
 
         async function downloadPDF() {
-            const { jsPDF } = window.jspdf; 
-            const doc = new jsPDF('l', 'mm', 'a4');
-            const tech = document.getElementById('filter-tecnico').value;
-            const start = document.getElementById('filter-inicio').value;
-            const end = document.getElementById('filter-fin').value;
-            const month = document.getElementById('filter-mes').value;
-
-            let query = _supabase.from('incidencias').select('*').order('fecha_manual', { ascending: false });
-            if (tech !== "Todos") query = query.eq('tecnico', tech);
-            if (start && end) query = query.gte('fecha_manual', start).lte('fecha_manual', end);
-            else if (month) {
-                const [year, mNum] = month.split('-');
-                const ld = new Date(year, mNum, 0).getDate();
-                query = query.gte('fecha_manual', `${month}-01`).lte('fecha_manual', `${month}-${ld}`);
-            }
-
-            const { data } = await query;
-            if(!data || data.length === 0) return showToast("Sin datos para exportar", "warning");
-
-            doc.setFontSize(16); doc.setTextColor(37, 99, 235);
-            doc.text("BETA TICKET - REPORTE TÉCNICO", 14, 15);
-            doc.autoTable({ 
-                head: [['Fecha', 'Técnico', 'Cliente', 'Fallas', 'Solución']], 
-                body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion]), 
-                startY: 25,
-                headStyles: { fillColor: [30, 41, 59] }
-            });
-            doc.save(`Reporte_Beta_${new Date().toISOString().split('T')[0]}.pdf`);
-            showToast("PDF Exportado");
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
+            const { data } = await _supabase.from('incidencias').select('*').order('fecha_manual', {ascending: false});
+            doc.text("REPORTE BETA TICKET", 14, 15);
+            doc.autoTable({ head: [['Fecha', 'Técnico', 'Cliente', 'Fallas', 'Solución']], body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion]) });
+            doc.save("Reporte.pdf");
         }
 
-        async function cargarSugerencias() {
-            const cols = ['cliente', 'sn_equipo', 'abastecedor'];
-            for (const col of cols) {
-                const { data } = await _supabase.from('incidencias').select(col);
-                if (data) {
-                    const unicos = [...new Set(data.map(item => item[col]))].filter(Boolean);
-                    const list = document.getElementById(`list-${col.replace('_', '')}`);
-                    if(list) list.innerHTML = unicos.map(v => `<option value="${v}">`).join('');
-                }
-            }
-        }
-
-        // --- Formulario Principal ---
+        // --- Formulario ---
         document.getElementById('incidentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = 'PROCESANDO...';
+            const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = 'GUARDANDO...';
             const detailOtro = document.getElementById('detalleOtro');
             const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => (el.value === 'Otro') ? `OTRO: ${detailOtro.value}` : el.value);
-
-            if(fallas.length === 0) { showToast("Selecciona una falla", "warning"); btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO'; return; }
 
             const payload = {
                 tecnico: document.getElementById('tecnico').value,
@@ -382,22 +268,14 @@
             };
 
             const { error } = await _supabase.from('incidencias').insert([payload]);
-            if(!error) { 
-                showToast("Registro Guardado"); 
-                e.target.reset(); 
-                document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0]; 
-                document.getElementById('detalleOtro').classList.add('hidden');
-                cargarSugerencias(); 
-            } else { 
-                showToast("Error de Conexión", "error"); 
-            }
+            if(!error) { showToast("¡Registro Guardado!"); e.target.reset(); document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0]; }
+            else { showToast("Error al guardar", "error"); }
             btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO';
         });
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
             document.getElementById('checkOtro').addEventListener('change', (e) => document.getElementById('detalleOtro').classList.toggle('hidden', !e.target.checked));
-            cargarSugerencias();
         });
     </script>
 </body>
