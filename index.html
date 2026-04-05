@@ -277,7 +277,7 @@
                     <td class="p-5">
                         <div class="font-black text-slate-800 text-[10px] uppercase">${row.cliente}</div>
                         <div class="text-[9px] text-slate-400 font-bold">S/N: ${row.sn_equipo}</div>
-                        ${row.abastecedor ? `<span class="inline-block mt-1 bg-orange-100 text-orange-600 text-[8px] px-2 py-1 rounded-full font-black uppercase">Transporte: ${row.abastecedor}</span>` : ''}
+                        ${row.abastecedor ? `<span class="inline-block mt-1 bg-orange-100 text-orange-600 text-[8px] px-2 py-1 rounded-full font-black uppercase">Abastecedor: ${row.abastecedor}</span>` : ''}
                     </td>
                     <td class="p-5"><div class="flex flex-wrap gap-1">${row.fallas.map(f => `<span class="bg-blue-50 text-blue-600 text-[9px] px-2 py-0.5 rounded font-bold uppercase">${f}</span>`).join('')}</div></td>
                     <td class="p-5 text-[11px] font-medium text-slate-500 max-w-xs leading-tight">${row.solucion}</td>
