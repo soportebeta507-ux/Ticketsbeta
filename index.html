@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beta Ticket Management</title>
+    <title>Beta Ticket Management | Official</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,36 +12,20 @@
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-        
         body { font-family: 'Inter', sans-serif; }
         .glass-card { background: white; transition: all 0.3s ease; }
         #admin-modal, #pin-modal { display: none; opacity: 0; transition: all 0.3s ease; z-index: 100; }
         #admin-modal.active, #pin-modal.active { display: flex; opacity: 1; }
-        
-        /* Custom Select Styling */
-        select {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1.25rem;
-        }
-
-        /* Estilos PIN */
+        select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.25rem; }
         .pin-dot { width: 14px; height: 14px; border: 2px solid #cbd5e1; border-radius: 50%; transition: all 0.2s; }
         .pin-dot.filled { background: #2563eb; border-color: #2563eb; transform: scale(1.2); }
         .num-btn { width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f8fafc; font-weight: 900; border: 1px solid #f1f5f9; cursor: pointer; transition: all 0.1s; }
         .num-btn:active { background: #e2e8f0; transform: scale(0.9); }
-
-        /* Modern Inputs Admin */
-        .admin-input-group { position: relative; width: 100%; }
         .admin-label { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 0.5rem; margin-bottom: 0.25rem; display: block; }
         .admin-field { width: 100%; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.6rem 0.75rem; font-size: 11px; font-weight: 700; color: #334155; outline: none; transition: all 0.2s; }
-        .admin-field:focus { border-color: #3b82f6; background: white; ring: 2px solid #dbeafe; }
-
+        .admin-field:focus { border-color: #3b82f6; background: white; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         .animate-blink { animation: blink 1.5s infinite; }
-        
         #toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
         .toast { min-width: 280px; padding: 16px; border-radius: 1.25rem; background: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-left: 6px solid #10b981; }
         .toast.active { transform: translateX(0); }
@@ -83,17 +67,17 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="admin-input-group">
                     <span class="admin-label">Nombre del Cliente</span>
-                    <input type="text" id="cliente" list="list-cliente" required placeholder="Ej: Novey" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="cliente" required placeholder="Ej: Novey" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="admin-input-group">
                     <span class="admin-label">Número de Serie</span>
-                    <input type="text" id="sn_equipo" list="list-sn" required placeholder="S/N" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="sn_equipo" required placeholder="S/N" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
 
             <div class="admin-input-group">
                 <span class="admin-label">Abastecedor CIT (Opcional)</span>
-                <input type="text" id="abastecedor" list="list-abastecedor" placeholder="Nombre del abastecedor..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="abastecedor" placeholder="Nombre del abastecedor..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 focus:ring-2 focus:ring-blue-500">
             </div>
             
             <div class="bg-blue-50/40 p-6 rounded-[2rem] border border-blue-100/50">
@@ -154,28 +138,23 @@
                                 <option>Adriel Aizpurua</option><option>Ellery Mendoza</option><option>Axel De Leon</option>
                             </select>
                         </div>
-                        
                         <div class="space-y-2">
-                            <span class="admin-label">Rango de Días Específicos</span>
+                            <span class="admin-label">Rango de Días</span>
                             <div class="grid grid-cols-2 gap-2">
                                 <input type="date" id="filter-inicio" onchange="clearMonth(); loadAdminData()" class="admin-field !text-[10px]">
                                 <input type="date" id="filter-fin" onchange="clearMonth(); loadAdminData()" class="admin-field !text-[10px]">
                             </div>
                         </div>
-
                         <div class="admin-input-group">
-                            <span class="admin-label">Ver por Mes Completo</span>
+                            <span class="admin-label">Mes Completo</span>
                             <input type="month" id="filter-mes" onchange="clearDates(); loadAdminData()" class="admin-field">
                         </div>
-
                         <div class="bg-blue-600 p-4 rounded-2xl text-center shadow-lg shadow-blue-100">
                             <span id="record-count" class="text-3xl font-black text-white">0</span>
                             <p class="text-[8px] font-black text-blue-100 uppercase tracking-widest mt-1">Total de Casos</p>
                         </div>
-
                         <button onclick="downloadPDF()" class="w-full bg-slate-800 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest hover:bg-black transition-all">Generar PDF</button>
                     </div>
-
                     <div class="lg:col-span-3 bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm min-h-[300px]">
                         <canvas id="statsChart"></canvas>
                     </div>
@@ -195,8 +174,6 @@
         </div>
     </div>
 
-    <datalist id="list-cliente"></datalist><datalist id="list-sn"></datalist><datalist id="list-abastecedor"></datalist>
-
     <script>
         const SUPABASE_URL = 'https://visznzzesyveymnlfbpp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpc3puenplc3l2ZXltbmxmYnBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDU4NTUsImV4cCI6MjA5MDU4MTg1NX0.FItuISXRPOJIXazRPKJbOl1MQ8n3P1McRauPX51nci8';
@@ -206,6 +183,13 @@
         let pressTimer;
         let currentPin = "";
         const MASTER_PIN = "2026";
+
+        // --- UTILIDADES ---
+        function getLocalPanamaDate() {
+            const date = new Date();
+            // Ajuste manual de zona horaria para Panamá (UTC-5)
+            return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        }
 
         function showToast(msg) {
             const c = document.getElementById('toast-container');
@@ -217,11 +201,12 @@
             setTimeout(() => { t.classList.remove('active'); setTimeout(() => t.remove(), 400); }, 3000);
         }
 
-        // Logo PIN logic
+        // --- LÓGICA PIN ---
         const logoBtn = document.getElementById('logo-btn');
-        logoBtn.addEventListener('mousedown', () => pressTimer = setTimeout(() => { currentPin = ""; updatePinDots(); document.getElementById('pin-modal').classList.add('active'); }, 2000));
+        const triggerPin = () => { currentPin = ""; updatePinDots(); document.getElementById('pin-modal').classList.add('active'); };
+        logoBtn.addEventListener('mousedown', () => pressTimer = setTimeout(triggerPin, 2000));
         logoBtn.addEventListener('mouseup', () => clearTimeout(pressTimer));
-        logoBtn.addEventListener('touchstart', (e) => { pressTimer = setTimeout(() => { currentPin = ""; updatePinDots(); document.getElementById('pin-modal').classList.add('active'); }, 2000); });
+        logoBtn.addEventListener('touchstart', (e) => { e.preventDefault(); pressTimer = setTimeout(triggerPin, 2000); });
         logoBtn.addEventListener('touchend', () => clearTimeout(pressTimer));
 
         function pressNum(n) { if(currentPin.length < 4) { currentPin += n; updatePinDots(); if(currentPin.length === 4) setTimeout(validatePin, 200); } }
@@ -234,7 +219,7 @@
         }
         function closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); }
 
-        // Filtros
+        // --- PANEL ADMIN ---
         function clearMonth() { document.getElementById('filter-mes').value = ""; }
         function clearDates() { document.getElementById('filter-inicio').value = ""; document.getElementById('filter-fin').value = ""; }
 
@@ -244,12 +229,14 @@
             const end = document.getElementById('filter-fin').value;
             const month = document.getElementById('filter-mes').value;
 
-            let query = _supabase.from('incidencias').select('*').order('fecha_manual', { ascending: false });
-            if (tech !== "Todos") query = query.eq('tecnico', tech);
+            // FIX: Doble ordenamiento. Primero el día manual, luego el orden de inserción real (created_at)
+            let query = _supabase.from('incidencias').select('*')
+                .order('fecha_manual', { ascending: false })
+                .order('created_at', { ascending: false });
 
-            if (start && end) {
-                query = query.gte('fecha_manual', start).lte('fecha_manual', end);
-            } else if (month) {
+            if (tech !== "Todos") query = query.eq('tecnico', tech);
+            if (start && end) query = query.gte('fecha_manual', start).lte('fecha_manual', end);
+            else if (month) {
                 const [year, mNum] = month.split('-');
                 const lastDay = new Date(year, mNum, 0).getDate();
                 query = query.gte('fecha_manual', `${month}-01`).lte('fecha_manual', `${month}-${lastDay}`);
@@ -261,12 +248,12 @@
             updateChart(data || []);
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold uppercase text-xs">Sin registros</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold uppercase text-xs">Sin registros encontrados</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = data.map(row => {
-                const hora = row.created_at ? new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
+                const hora = row.created_at ? new Date(row.created_at).toLocaleTimeString('es-PA', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
                 return `
                 <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
                     <td class="p-5">
@@ -298,17 +285,33 @@
 
         async function downloadPDF() {
             const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
-            const { data } = await _supabase.from('incidencias').select('*').order('fecha_manual', {ascending: false});
-            doc.text("REPORTE BETA TICKET - CONTROL DE CALIDAD", 14, 15);
-            doc.autoTable({ head: [['Fecha', 'Técnico', 'Cliente', 'Fallas', 'Solución']], body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion]), theme: 'grid', headStyles: { fillColor: [30, 41, 59] } });
-            doc.save(`Reporte_Beta_Tickets.pdf`);
+            const { data } = await _supabase.from('incidencias').select('*')
+                .order('fecha_manual', {ascending: false})
+                .order('created_at', {ascending: false});
+            
+            doc.setFontSize(16); doc.text("REPORTE BETA TICKET - CONTROL DE CALIDAD", 14, 15);
+            doc.autoTable({ 
+                startY: 25,
+                head: [['Fecha', 'Técnico', 'Cliente', 'Fallas', 'Solución']], 
+                body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion]), 
+                theme: 'grid', 
+                headStyles: { fillColor: [30, 41, 59] },
+                styles: { fontSize: 8 }
+            });
+            doc.save(`Reporte_Beta_Tickets_${getLocalPanamaDate()}.pdf`);
         }
 
+        // --- SUBMIT FORMULARIO ---
         document.getElementById('incidentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = 'PROCESANDO...';
+            const btn = document.getElementById('btnSubmit'); 
+            btn.disabled = true; btn.innerText = 'PROCESANDO...';
+            
             const detailOtro = document.getElementById('detalleOtro');
             const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => (el.value === 'Otro') ? `OTRO: ${detailOtro.value}` : el.value);
+
+            // FIX: Asegurar que si el input está vacío, use la fecha de hoy local
+            const fechaManual = document.getElementById('fecha_atencion').value || getLocalPanamaDate();
 
             const payload = {
                 tecnico: document.getElementById('tecnico').value,
@@ -317,16 +320,24 @@
                 abastecedor: document.getElementById('abastecedor').value || null,
                 fallas: fallas,
                 solucion: document.getElementById('solucion').value,
-                fecha_manual: document.getElementById('fecha_atencion').value
+                fecha_manual: fechaManual
             };
 
             const { error } = await _supabase.from('incidencias').insert([payload]);
-            if(!error) { showToast("REGISTRO GUARDADO CON ÉXITO"); e.target.reset(); document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0]; }
+            if(!error) { 
+                showToast("REGISTRO GUARDADO CON ÉXITO"); 
+                e.target.reset(); 
+                document.getElementById('fecha_atencion').value = getLocalPanamaDate();
+                document.getElementById('detalleOtro').classList.add('hidden');
+            } else {
+                alert("Error al guardar: " + error.message);
+            }
             btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO TÉCNICO';
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
+            // Inicializar con fecha local de Panamá
+            document.getElementById('fecha_atencion').value = getLocalPanamaDate();
             document.getElementById('checkOtro').addEventListener('change', (e) => document.getElementById('detalleOtro').classList.toggle('hidden', !e.target.checked));
         });
     </script>
