@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Beta Ticket Management | Official</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,7 +12,7 @@
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .glass-card { background: white; transition: all 0.3s ease; }
         #admin-modal, #pin-modal { display: none; opacity: 0; transition: all 0.3s ease; z-index: 100; }
         #admin-modal.active, #pin-modal.active { display: flex; opacity: 1; }
@@ -34,6 +34,10 @@
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
 
     <div id="toast-container"></div>
+
+    <datalist id="list-clientes"></datalist>
+    <datalist id="list-series"></datalist>
+    <datalist id="list-abastecedores"></datalist>
 
     <div id="main-app" class="glass-card w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 md:p-10 border border-slate-200">
         <header class="mb-8">
@@ -67,17 +71,17 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="admin-input-group">
                     <span class="admin-label">Nombre del Cliente</span>
-                    <input type="text" id="cliente" required placeholder="Ej: Novey" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="cliente" list="list-clientes" required placeholder="Ej: Novey" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="admin-input-group">
                     <span class="admin-label">Número de Serie</span>
-                    <input type="text" id="sn_equipo" required placeholder="S/N" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="sn_equipo" list="list-series" required placeholder="S/N" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
 
             <div class="admin-input-group">
                 <span class="admin-label">Abastecedor CIT (Opcional)</span>
-                <input type="text" id="abastecedor" placeholder="Nombre del abastecedor..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="abastecedor" list="list-abastecedores" placeholder="Nombre del abastecedor..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 focus:ring-2 focus:ring-blue-500">
             </div>
             
             <div class="bg-blue-50/40 p-6 rounded-[2rem] border border-blue-100/50">
@@ -187,7 +191,6 @@
         // --- UTILIDADES ---
         function getLocalPanamaDate() {
             const date = new Date();
-            // Ajuste manual de zona horaria para Panamá (UTC-5)
             return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
         }
 
@@ -199,6 +202,20 @@
             c.appendChild(t);
             setTimeout(() => t.classList.add('active'), 10);
             setTimeout(() => { t.classList.remove('active'); setTimeout(() => t.remove(), 400); }, 3000);
+        }
+
+        // --- PREDICCIÓN / AUTOCOMPLETADO ---
+        async function updateSugerencias() {
+            const { data, error } = await _supabase.from('incidencias').select('cliente, sn_equipo, abastecedor');
+            if (error) return;
+
+            const uniqueClientes = [...new Set(data.map(i => i.cliente).filter(Boolean))];
+            const uniqueSeries = [...new Set(data.map(i => i.sn_equipo).filter(Boolean))];
+            const uniqueAbastecedores = [...new Set(data.map(i => i.abastecedor).filter(Boolean))];
+
+            document.getElementById('list-clientes').innerHTML = uniqueClientes.map(c => `<option value="${c}">`).join('');
+            document.getElementById('list-series').innerHTML = uniqueSeries.map(s => `<option value="${s}">`).join('');
+            document.getElementById('list-abastecedores').innerHTML = uniqueAbastecedores.map(a => `<option value="${a}">`).join('');
         }
 
         // --- LÓGICA PIN ---
@@ -229,7 +246,6 @@
             const end = document.getElementById('filter-fin').value;
             const month = document.getElementById('filter-mes').value;
 
-            // FIX: Doble ordenamiento. Primero el día manual, luego el orden de inserción real (created_at)
             let query = _supabase.from('incidencias').select('*')
                 .order('fecha_manual', { ascending: false })
                 .order('created_at', { ascending: false });
@@ -285,19 +301,9 @@
 
         async function downloadPDF() {
             const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
-            const { data } = await _supabase.from('incidencias').select('*')
-                .order('fecha_manual', {ascending: false})
-                .order('created_at', {ascending: false});
-            
+            const { data } = await _supabase.from('incidencias').select('*').order('fecha_manual', {ascending: false});
             doc.setFontSize(16); doc.text("REPORTE BETA TICKET - CONTROL DE CALIDAD", 14, 15);
-            doc.autoTable({ 
-                startY: 25,
-                head: [['Fecha', 'Técnico', 'Cliente', 'Fallas', 'Solución']], 
-                body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion]), 
-                theme: 'grid', 
-                headStyles: { fillColor: [30, 41, 59] },
-                styles: { fontSize: 8 }
-            });
+            doc.autoTable({ startY: 25, head: [['Fecha', 'Técnico', 'Cliente', 'Fallas', 'Solución']], body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion]), theme: 'grid', headStyles: { fillColor: [30, 41, 59] }, styles: { fontSize: 8 } });
             doc.save(`Reporte_Beta_Tickets_${getLocalPanamaDate()}.pdf`);
         }
 
@@ -310,9 +316,6 @@
             const detailOtro = document.getElementById('detalleOtro');
             const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => (el.value === 'Otro') ? `OTRO: ${detailOtro.value}` : el.value);
 
-            // FIX: Asegurar que si el input está vacío, use la fecha de hoy local
-            const fechaManual = document.getElementById('fecha_atencion').value || getLocalPanamaDate();
-
             const payload = {
                 tecnico: document.getElementById('tecnico').value,
                 cliente: document.getElementById('cliente').value,
@@ -320,25 +323,40 @@
                 abastecedor: document.getElementById('abastecedor').value || null,
                 fallas: fallas,
                 solucion: document.getElementById('solucion').value,
-                fecha_manual: fechaManual
+                fecha_manual: document.getElementById('fecha_atencion').value || getLocalPanamaDate()
             };
 
             const { error } = await _supabase.from('incidencias').insert([payload]);
             if(!error) { 
-                showToast("REGISTRO GUARDADO CON ÉXITO"); 
+                showToast("REGISTRO GUARDADO"); 
+                // Guardar técnico en memoria local para la próxima vez
+                localStorage.setItem('prefered_tech', payload.tecnico);
                 e.target.reset(); 
+                document.getElementById('tecnico').value = payload.tecnico;
                 document.getElementById('fecha_atencion').value = getLocalPanamaDate();
                 document.getElementById('detalleOtro').classList.add('hidden');
+                updateSugerencias(); // Refrescar listas de predicción
             } else {
-                alert("Error al guardar: " + error.message);
+                alert("Error: " + error.message);
             }
             btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO TÉCNICO';
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Inicializar con fecha local de Panamá
             document.getElementById('fecha_atencion').value = getLocalPanamaDate();
-            document.getElementById('checkOtro').addEventListener('change', (e) => document.getElementById('detalleOtro').classList.toggle('hidden', !e.target.checked));
+            
+            // Recuperar técnico anterior
+            const lastTech = localStorage.getItem('prefered_tech');
+            if(lastTech) document.getElementById('tecnico').value = lastTech;
+
+            // Cargar predicciones iniciales
+            updateSugerencias();
+
+            document.getElementById('checkOtro').addEventListener('change', (e) => {
+                const detail = document.getElementById('detalleOtro');
+                detail.classList.toggle('hidden', !e.target.checked);
+                detail.required = e.target.checked;
+            });
         });
     </script>
 </body>
