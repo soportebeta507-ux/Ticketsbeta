@@ -13,17 +13,45 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        /* Estilos de las Sugerencias Personalizadas */
+        .suggestion-box {
+            position: absolute;
+            z-index: 100;
+            width: 100%;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            margin-top: 4px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .suggestion-item {
+            padding: 14px 18px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            text-transform: uppercase;
+        }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:active { background: #eff6ff; color: #2563eb; }
+
         .glass-card { background: white; transition: all 0.3s ease; }
-        #admin-modal, #pin-modal { display: none; opacity: 0; transition: all 0.3s ease; z-index: 100; }
+        #admin-modal, #pin-modal { display: none; opacity: 0; transition: all 0.3s ease; z-index: 200; }
         #admin-modal.active, #pin-modal.active { display: flex; opacity: 1; }
-        select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.25rem; }
+        
         .pin-dot { width: 14px; height: 14px; border: 2px solid #cbd5e1; border-radius: 50%; transition: all 0.2s; }
         .pin-dot.filled { background: #2563eb; border-color: #2563eb; transform: scale(1.2); }
-        .num-btn { width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f8fafc; font-weight: 900; border: 1px solid #f1f5f9; cursor: pointer; transition: all 0.1s; }
+        .num-btn { width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f8fafc; font-weight: 900; border: 1px solid #f1f5f9; cursor: pointer; }
         .num-btn:active { background: #e2e8f0; transform: scale(0.9); }
-        .admin-label { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 0.5rem; margin-bottom: 0.25rem; display: block; }
-        .admin-field { width: 100%; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.6rem 0.75rem; font-size: 11px; font-weight: 700; color: #334155; outline: none; transition: all 0.2s; }
-        .admin-field:focus { border-color: #3b82f6; background: white; }
+        
+        .admin-label { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; display: block; }
+        .admin-field { width: 100%; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.6rem 0.75rem; font-size: 11px; font-weight: 700; color: #334155; outline: none; }
+        
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         .animate-blink { animation: blink 1.5s infinite; }
         #toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
@@ -34,10 +62,6 @@
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
 
     <div id="toast-container"></div>
-
-    <datalist id="list-clientes"></datalist>
-    <datalist id="list-series"></datalist>
-    <datalist id="list-abastecedores"></datalist>
 
     <div id="main-app" class="glass-card w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 md:p-10 border border-slate-200">
         <header class="mb-8">
@@ -69,19 +93,22 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="admin-input-group">
+                <div class="admin-input-group relative">
                     <span class="admin-label">Nombre del Cliente</span>
-                    <input type="text" id="cliente" list="list-clientes" required placeholder="Ej: Novey" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="cliente" autocomplete="off" required placeholder="Ej: Novey" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
+                    <div id="suggest-cliente" class="suggestion-box"></div>
                 </div>
-                <div class="admin-input-group">
+                <div class="admin-input-group relative">
                     <span class="admin-label">Número de Serie</span>
-                    <input type="text" id="sn_equipo" list="list-series" required placeholder="S/N" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="sn_equipo" autocomplete="off" required placeholder="S/N" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
+                    <div id="suggest-serie" class="suggestion-box"></div>
                 </div>
             </div>
 
-            <div class="admin-input-group">
+            <div class="admin-input-group relative">
                 <span class="admin-label">Abastecedor CIT (Opcional)</span>
-                <input type="text" id="abastecedor" list="list-abastecedores" placeholder="Nombre del abastecedor..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="abastecedor" autocomplete="off" placeholder="Nombre del abastecedor..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 focus:ring-2 focus:ring-blue-500">
+                <div id="suggest-abastecedor" class="suggestion-box"></div>
             </div>
             
             <div class="bg-blue-50/40 p-6 rounded-[2rem] border border-blue-100/50">
@@ -187,6 +214,7 @@
         let pressTimer;
         let currentPin = "";
         const MASTER_PIN = "2026";
+        let cacheData = { clientes: [], series: [], abastecedores: [] };
 
         // --- UTILIDADES ---
         function getLocalPanamaDate() {
@@ -204,18 +232,49 @@
             setTimeout(() => { t.classList.remove('active'); setTimeout(() => t.remove(), 400); }, 3000);
         }
 
-        // --- PREDICCIÓN / AUTOCOMPLETADO ---
-        async function updateSugerencias() {
-            const { data, error } = await _supabase.from('incidencias').select('cliente, sn_equipo, abastecedor');
-            if (error) return;
+        // --- MOTOR DE BÚSQUEDA INTERNO (REEMPLAZA DATALIST) ---
+        async function fetchSugerencias() {
+            const { data } = await _supabase.from('incidencias').select('cliente, sn_equipo, abastecedor');
+            if (data) {
+                cacheData.clientes = [...new Set(data.map(i => i.cliente).filter(Boolean))];
+                cacheData.series = [...new Set(data.map(i => i.sn_equipo).filter(Boolean))];
+                cacheData.abastecedores = [...new Set(data.map(i => i.abastecedor).filter(Boolean))];
+            }
+        }
 
-            const uniqueClientes = [...new Set(data.map(i => i.cliente).filter(Boolean))];
-            const uniqueSeries = [...new Set(data.map(i => i.sn_equipo).filter(Boolean))];
-            const uniqueAbastecedores = [...new Set(data.map(i => i.abastecedor).filter(Boolean))];
+        function setupAutoSuggest(inputId, boxId, dataKey) {
+            const input = document.getElementById(inputId);
+            const box = document.getElementById(boxId);
 
-            document.getElementById('list-clientes').innerHTML = uniqueClientes.map(c => `<option value="${c}">`).join('');
-            document.getElementById('list-series').innerHTML = uniqueSeries.map(s => `<option value="${s}">`).join('');
-            document.getElementById('list-abastecedores').innerHTML = uniqueAbastecedores.map(a => `<option value="${a}">`).join('');
+            input.addEventListener('input', (e) => {
+                const val = e.target.value.toLowerCase();
+                box.innerHTML = '';
+                if (val.length < 1) { box.style.display = 'none'; return; }
+
+                const matches = cacheData[dataKey]
+                    .filter(item => item.toLowerCase().includes(val))
+                    .slice(0, 5); // Máximo 5 sugerencias
+
+                if (matches.length > 0) {
+                    matches.forEach(match => {
+                        const div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        div.textContent = match;
+                        div.onclick = () => {
+                            input.value = match;
+                            box.style.display = 'none';
+                        };
+                        box.appendChild(div);
+                    });
+                    box.style.display = 'block';
+                } else {
+                    box.style.display = 'none';
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !box.contains(e.target)) box.style.display = 'none';
+            });
         }
 
         // --- LÓGICA PIN ---
@@ -237,81 +296,55 @@
         function closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); }
 
         // --- PANEL ADMIN ---
-        function clearMonth() { document.getElementById('filter-mes').value = ""; }
-        function clearDates() { document.getElementById('filter-inicio').value = ""; document.getElementById('filter-fin').value = ""; }
-
         async function loadAdminData() {
             const tech = document.getElementById('filter-tecnico').value;
             const start = document.getElementById('filter-inicio').value;
             const end = document.getElementById('filter-fin').value;
             const month = document.getElementById('filter-mes').value;
 
-            let query = _supabase.from('incidencias').select('*')
-                .order('fecha_manual', { ascending: false })
-                .order('created_at', { ascending: false });
+            let query = _supabase.from('incidencias').select('*').order('fecha_manual', { ascending: false }).order('created_at', { ascending: false });
 
             if (tech !== "Todos") query = query.eq('tecnico', tech);
             if (start && end) query = query.gte('fecha_manual', start).lte('fecha_manual', end);
             else if (month) {
-                const [year, mNum] = month.split('-');
-                const lastDay = new Date(year, mNum, 0).getDate();
-                query = query.gte('fecha_manual', `${month}-01`).lte('fecha_manual', `${month}-${lastDay}`);
+                const [y, m] = month.split('-');
+                const last = new Date(y, m, 0).getDate();
+                query = query.gte('fecha_manual', `${month}-01`).lte('fecha_manual', `${month}-${last}`);
             }
 
             const { data } = await query;
-            const tbody = document.getElementById('table-body');
             document.getElementById('record-count').innerText = data ? data.length : 0;
             updateChart(data || []);
-
-            if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold uppercase text-xs">Sin registros encontrados</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = data.map(row => {
-                const hora = row.created_at ? new Date(row.created_at).toLocaleTimeString('es-PA', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
-                return `
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = (data || []).map(row => `
                 <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
-                    <td class="p-5">
-                        <div class="font-black text-blue-600 text-xs">${row.fecha_manual}</div>
-                        <div class="text-[9px] font-bold text-slate-400 italic">${hora}</div>
-                    </td>
+                    <td class="p-5"><div class="font-black text-blue-600 text-xs">${row.fecha_manual}</div></td>
                     <td class="p-5 font-bold text-slate-700 text-xs">${row.tecnico}</td>
-                    <td class="p-5">
-                        <div class="font-black text-slate-800 text-[10px] uppercase">${row.cliente}</div>
-                        <div class="text-[9px] text-slate-400 font-bold">S/N: ${row.sn_equipo}</div>
-                        ${row.abastecedor ? `<span class="inline-block mt-1 bg-orange-100 text-orange-600 text-[8px] px-2 py-1 rounded-full font-black uppercase">Abastecedor: ${row.abastecedor}</span>` : ''}
-                    </td>
+                    <td class="p-5"><div class="font-black text-slate-800 text-[10px] uppercase">${row.cliente}</div><div class="text-[9px] text-slate-400 font-bold">S/N: ${row.sn_equipo}</div></td>
                     <td class="p-5"><div class="flex flex-wrap gap-1">${row.fallas.map(f => `<span class="bg-blue-50 text-blue-600 text-[9px] px-2 py-0.5 rounded font-bold uppercase">${f}</span>`).join('')}</div></td>
                     <td class="p-5 text-[11px] font-medium text-slate-500 max-w-xs leading-tight">${row.solucion}</td>
-                </tr>`;
-            }).join('');
+                </tr>`).join('');
         }
 
         function updateChart(data) {
             const ctx = document.getElementById('statsChart').getContext('2d');
             const counts = {}; data.forEach(r => counts[r.tecnico] = (counts[r.tecnico] || 0) + 1);
             if(myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: Object.keys(counts), datasets: [{ label: 'Tickets', data: Object.values(counts), backgroundColor: '#2563eb', borderRadius: 12 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
+            myChart = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(counts), datasets: [{ label: 'Tickets', data: Object.values(counts), backgroundColor: '#2563eb', borderRadius: 12 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
         }
 
         async function downloadPDF() {
             const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
             const { data } = await _supabase.from('incidencias').select('*').order('fecha_manual', {ascending: false});
-            doc.setFontSize(16); doc.text("REPORTE BETA TICKET - CONTROL DE CALIDAD", 14, 15);
-            doc.autoTable({ startY: 25, head: [['Fecha', 'Técnico', 'Cliente', 'Fallas', 'Solución']], body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion]), theme: 'grid', headStyles: { fillColor: [30, 41, 59] }, styles: { fontSize: 8 } });
-            doc.save(`Reporte_Beta_Tickets_${getLocalPanamaDate()}.pdf`);
+            doc.autoTable({ head: [['Fecha', 'Técnico', 'Cliente', 'Fallas', 'Solución']], body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion]), theme: 'grid', headStyles: { fillColor: [30, 41, 59] } });
+            doc.save(`Reporte_${getLocalPanamaDate()}.pdf`);
         }
 
         // --- SUBMIT FORMULARIO ---
         document.getElementById('incidentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit'); 
-            btn.disabled = true; btn.innerText = 'PROCESANDO...';
+            btn.disabled = true; btn.innerText = 'GUARDANDO...';
             
             const detailOtro = document.getElementById('detalleOtro');
             const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => (el.value === 'Otro') ? `OTRO: ${detailOtro.value}` : el.value);
@@ -328,34 +361,32 @@
 
             const { error } = await _supabase.from('incidencias').insert([payload]);
             if(!error) { 
-                showToast("REGISTRO GUARDADO"); 
-                // Guardar técnico en memoria local para la próxima vez
-                localStorage.setItem('prefered_tech', payload.tecnico);
+                showToast("REGISTRO GUARDADO CON ÉXITO"); 
+                localStorage.setItem('saved_tech', payload.tecnico);
                 e.target.reset(); 
                 document.getElementById('tecnico').value = payload.tecnico;
                 document.getElementById('fecha_atencion').value = getLocalPanamaDate();
                 document.getElementById('detalleOtro').classList.add('hidden');
-                updateSugerencias(); // Refrescar listas de predicción
-            } else {
-                alert("Error: " + error.message);
-            }
+                fetchSugerencias();
+            } else { alert("Error: " + error.message); }
             btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO TÉCNICO';
         });
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('fecha_atencion').value = getLocalPanamaDate();
-            
-            // Recuperar técnico anterior
-            const lastTech = localStorage.getItem('prefered_tech');
-            if(lastTech) document.getElementById('tecnico').value = lastTech;
+            const last = localStorage.getItem('saved_tech');
+            if(last) document.getElementById('tecnico').value = last;
 
-            // Cargar predicciones iniciales
-            updateSugerencias();
+            fetchSugerencias().then(() => {
+                setupAutoSuggest('cliente', 'suggest-cliente', 'clientes');
+                setupAutoSuggest('sn_equipo', 'suggest-serie', 'series');
+                setupAutoSuggest('abastecedor', 'suggest-abastecedor', 'abastecedores');
+            });
 
             document.getElementById('checkOtro').addEventListener('change', (e) => {
-                const detail = document.getElementById('detalleOtro');
-                detail.classList.toggle('hidden', !e.target.checked);
-                detail.required = e.target.checked;
+                const det = document.getElementById('detalleOtro');
+                det.classList.toggle('hidden', !e.target.checked);
+                det.required = e.target.checked;
             });
         });
     </script>
