@@ -14,7 +14,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* Estilos de las Sugerencias Personalizadas */
         .suggestion-box {
             position: absolute;
             z-index: 100;
@@ -172,13 +171,13 @@
                         <div class="space-y-2">
                             <span class="admin-label">Rango de Días</span>
                             <div class="grid grid-cols-2 gap-2">
-                                <input type="date" id="filter-inicio" onchange="clearMonth(); loadAdminData()" class="admin-field !text-[10px]">
-                                <input type="date" id="filter-fin" onchange="clearMonth(); loadAdminData()" class="admin-field !text-[10px]">
+                                <input type="date" id="filter-inicio" onchange="loadAdminData()" class="admin-field !text-[10px]">
+                                <input type="date" id="filter-fin" onchange="loadAdminData()" class="admin-field !text-[10px]">
                             </div>
                         </div>
                         <div class="admin-input-group">
                             <span class="admin-label">Mes Completo</span>
-                            <input type="month" id="filter-mes" onchange="clearDates(); loadAdminData()" class="admin-field">
+                            <input type="month" id="filter-mes" onchange="loadAdminData()" class="admin-field">
                         </div>
                         <div class="bg-blue-600 p-4 rounded-2xl text-center shadow-lg shadow-blue-100">
                             <span id="record-count" class="text-3xl font-black text-white">0</span>
@@ -216,7 +215,6 @@
         const MASTER_PIN = "2026";
         let cacheData = { clientes: [], series: [], abastecedores: [] };
 
-        // --- UTILIDADES ---
         function getLocalPanamaDate() {
             const date = new Date();
             return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
@@ -232,7 +230,6 @@
             setTimeout(() => { t.classList.remove('active'); setTimeout(() => t.remove(), 400); }, 3000);
         }
 
-        // --- MOTOR DE BÚSQUEDA INTERNO (REEMPLAZA DATALIST) ---
         async function fetchSugerencias() {
             const { data } = await _supabase.from('incidencias').select('cliente, sn_equipo, abastecedor');
             if (data) {
@@ -245,39 +242,25 @@
         function setupAutoSuggest(inputId, boxId, dataKey) {
             const input = document.getElementById(inputId);
             const box = document.getElementById(boxId);
-
             input.addEventListener('input', (e) => {
                 const val = e.target.value.toLowerCase();
                 box.innerHTML = '';
                 if (val.length < 1) { box.style.display = 'none'; return; }
-
-                const matches = cacheData[dataKey]
-                    .filter(item => item.toLowerCase().includes(val))
-                    .slice(0, 5); // Máximo 5 sugerencias
-
+                const matches = cacheData[dataKey].filter(item => item.toLowerCase().includes(val)).slice(0, 5);
                 if (matches.length > 0) {
                     matches.forEach(match => {
                         const div = document.createElement('div');
                         div.className = 'suggestion-item';
                         div.textContent = match;
-                        div.onclick = () => {
-                            input.value = match;
-                            box.style.display = 'none';
-                        };
+                        div.onclick = () => { input.value = match; box.style.display = 'none'; };
                         box.appendChild(div);
                     });
                     box.style.display = 'block';
-                } else {
-                    box.style.display = 'none';
-                }
+                } else { box.style.display = 'none'; }
             });
-
-            document.addEventListener('click', (e) => {
-                if (!input.contains(e.target) && !box.contains(e.target)) box.style.display = 'none';
-            });
+            document.addEventListener('click', (e) => { if (!input.contains(e.target) && !box.contains(e.target)) box.style.display = 'none'; });
         }
 
-        // --- LÓGICA PIN ---
         const logoBtn = document.getElementById('logo-btn');
         const triggerPin = () => { currentPin = ""; updatePinDots(); document.getElementById('pin-modal').classList.add('active'); };
         logoBtn.addEventListener('mousedown', () => pressTimer = setTimeout(triggerPin, 2000));
@@ -295,14 +278,13 @@
         }
         function closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); }
 
-        // --- PANEL ADMIN ---
         async function loadAdminData() {
             const tech = document.getElementById('filter-tecnico').value;
             const start = document.getElementById('filter-inicio').value;
             const end = document.getElementById('filter-fin').value;
             const month = document.getElementById('filter-mes').value;
 
-            let query = _supabase.from('incidencias').select('*').order('fecha_manual', { ascending: false }).order('created_at', { ascending: false });
+            let query = _supabase.from('incidencias').select('*').order('created_at', { ascending: false });
 
             if (tech !== "Todos") query = query.eq('tecnico', tech);
             if (start && end) query = query.gte('fecha_manual', start).lte('fecha_manual', end);
@@ -316,14 +298,23 @@
             document.getElementById('record-count').innerText = data ? data.length : 0;
             updateChart(data || []);
             const tbody = document.getElementById('table-body');
-            tbody.innerHTML = (data || []).map(row => `
+            
+            tbody.innerHTML = (data || []).map(row => {
+                const hora = new Date(row.created_at).toLocaleTimeString('es-PA', { 
+                    hour: '2-digit', minute: '2-digit', hour12: true 
+                });
+                return `
                 <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
-                    <td class="p-5"><div class="font-black text-blue-600 text-xs">${row.fecha_manual}</div></td>
+                    <td class="p-5">
+                        <div class="font-black text-blue-600 text-xs">${row.fecha_manual}</div>
+                        <div class="text-[10px] text-slate-400 font-bold italic uppercase">${hora}</div>
+                    </td>
                     <td class="p-5 font-bold text-slate-700 text-xs">${row.tecnico}</td>
                     <td class="p-5"><div class="font-black text-slate-800 text-[10px] uppercase">${row.cliente}</div><div class="text-[9px] text-slate-400 font-bold">S/N: ${row.sn_equipo}</div></td>
                     <td class="p-5"><div class="flex flex-wrap gap-1">${row.fallas.map(f => `<span class="bg-blue-50 text-blue-600 text-[9px] px-2 py-0.5 rounded font-bold uppercase">${f}</span>`).join('')}</div></td>
                     <td class="p-5 text-[11px] font-medium text-slate-500 max-w-xs leading-tight">${row.solucion}</td>
-                </tr>`).join('');
+                </tr>`;
+            }).join('');
         }
 
         function updateChart(data) {
@@ -335,20 +326,21 @@
 
         async function downloadPDF() {
             const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
-            const { data } = await _supabase.from('incidencias').select('*').order('fecha_manual', {ascending: false});
-            doc.autoTable({ head: [['Fecha', 'Técnico', 'Cliente', 'Fallas', 'Solución']], body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion]), theme: 'grid', headStyles: { fillColor: [30, 41, 59] } });
+            const { data } = await _supabase.from('incidencias').select('*').order('created_at', {ascending: false});
+            const tableData = data.map(r => {
+                const h = new Date(r.created_at).toLocaleTimeString('es-PA', { hour: '2-digit', minute: '2-digit' });
+                return [`${r.fecha_manual} ${h}`, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion];
+            });
+            doc.autoTable({ head: [['Fecha/Hora', 'Técnico', 'Cliente', 'Fallas', 'Solución']], body: tableData, theme: 'grid', headStyles: { fillColor: [30, 41, 59] } });
             doc.save(`Reporte_${getLocalPanamaDate()}.pdf`);
         }
 
-        // --- SUBMIT FORMULARIO ---
         document.getElementById('incidentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit'); 
             btn.disabled = true; btn.innerText = 'GUARDANDO...';
-            
             const detailOtro = document.getElementById('detalleOtro');
             const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => (el.value === 'Otro') ? `OTRO: ${detailOtro.value}` : el.value);
-
             const payload = {
                 tecnico: document.getElementById('tecnico').value,
                 cliente: document.getElementById('cliente').value,
@@ -358,7 +350,6 @@
                 solucion: document.getElementById('solucion').value,
                 fecha_manual: document.getElementById('fecha_atencion').value || getLocalPanamaDate()
             };
-
             const { error } = await _supabase.from('incidencias').insert([payload]);
             if(!error) { 
                 showToast("REGISTRO GUARDADO CON ÉXITO"); 
@@ -376,13 +367,11 @@
             document.getElementById('fecha_atencion').value = getLocalPanamaDate();
             const last = localStorage.getItem('saved_tech');
             if(last) document.getElementById('tecnico').value = last;
-
             fetchSugerencias().then(() => {
                 setupAutoSuggest('cliente', 'suggest-cliente', 'clientes');
                 setupAutoSuggest('sn_equipo', 'suggest-serie', 'series');
                 setupAutoSuggest('abastecedor', 'suggest-abastecedor', 'abastecedores');
             });
-
             document.getElementById('checkOtro').addEventListener('change', (e) => {
                 const det = document.getElementById('detalleOtro');
                 det.classList.toggle('hidden', !e.target.checked);
