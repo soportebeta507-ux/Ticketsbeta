@@ -104,10 +104,17 @@
                 </div>
             </div>
 
-            <div class="admin-input-group relative">
-                <span class="admin-label">Abastecedor CIT (Opcional)</span>
-                <input type="text" id="abastecedor" autocomplete="off" placeholder="Nombre del abastecedor..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 focus:ring-2 focus:ring-blue-500">
-                <div id="suggest-abastecedor" class="suggestion-box"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="admin-input-group relative">
+                    <span class="admin-label">Abastecedor CIT (Opcional)</span>
+                    <input type="text" id="abastecedor" autocomplete="off" placeholder="Nombre..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 focus:ring-2 focus:ring-blue-500">
+                    <div id="suggest-abastecedor" class="suggestion-box"></div>
+                </div>
+                <div class="admin-input-group relative">
+                    <span class="admin-label">Atención A (Opcional)</span>
+                    <input type="text" id="atencion_a" autocomplete="off" placeholder="Persona que recibe..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none italic text-slate-500 focus:ring-2 focus:ring-blue-500">
+                    <div id="suggest-atencion" class="suggestion-box"></div>
+                </div>
             </div>
             
             <div class="bg-blue-50/40 p-6 rounded-[2rem] border border-blue-100/50">
@@ -192,9 +199,16 @@
 
                 <div class="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm min-w-[1000px]">
+                        <table class="w-full text-left text-sm min-w-[1100px]">
                             <thead class="bg-slate-800 text-white font-black uppercase text-[9px] tracking-widest">
-                                <tr><th class="p-5">Fecha / Hora</th><th class="p-5">Técnico</th><th class="p-5">Cliente / Info</th><th class="p-5">Fallas Detectadas</th><th class="p-5">Solución Técnica</th></tr>
+                                <tr>
+                                    <th class="p-5">Fecha / Hora</th>
+                                    <th class="p-5">Técnico</th>
+                                    <th class="p-5">Cliente / Info</th>
+                                    <th class="p-5">Abastecedor / Atiende</th>
+                                    <th class="p-5">Fallas</th>
+                                    <th class="p-5">Solución</th>
+                                </tr>
                             </thead>
                             <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
                         </table>
@@ -213,7 +227,7 @@
         let pressTimer;
         let currentPin = "";
         const MASTER_PIN = "2026";
-        let cacheData = { clientes: [], series: [], abastecedores: [] };
+        let cacheData = { clientes: [], series: [], abastecedores: [], atenciones: [] };
 
         function getLocalPanamaDate() {
             const date = new Date();
@@ -231,11 +245,12 @@
         }
 
         async function fetchSugerencias() {
-            const { data } = await _supabase.from('incidencias').select('cliente, sn_equipo, abastecedor');
+            const { data } = await _supabase.from('incidencias').select('cliente, sn_equipo, abastecedor, atencion_a');
             if (data) {
                 cacheData.clientes = [...new Set(data.map(i => i.cliente).filter(Boolean))];
                 cacheData.series = [...new Set(data.map(i => i.sn_equipo).filter(Boolean))];
                 cacheData.abastecedores = [...new Set(data.map(i => i.abastecedor).filter(Boolean))];
+                cacheData.atenciones = [...new Set(data.map(i => i.atencion_a).filter(Boolean))];
             }
         }
 
@@ -261,6 +276,7 @@
             document.addEventListener('click', (e) => { if (!input.contains(e.target) && !box.contains(e.target)) box.style.display = 'none'; });
         }
 
+        // Lógica de acceso Admin (Logo press)
         const logoBtn = document.getElementById('logo-btn');
         const triggerPin = () => { currentPin = ""; updatePinDots(); document.getElementById('pin-modal').classList.add('active'); };
         logoBtn.addEventListener('mousedown', () => pressTimer = setTimeout(triggerPin, 2000));
@@ -310,7 +326,14 @@
                         <div class="text-[10px] text-slate-400 font-bold italic uppercase">${hora}</div>
                     </td>
                     <td class="p-5 font-bold text-slate-700 text-xs">${row.tecnico}</td>
-                    <td class="p-5"><div class="font-black text-slate-800 text-[10px] uppercase">${row.cliente}</div><div class="text-[9px] text-slate-400 font-bold">S/N: ${row.sn_equipo}</div></td>
+                    <td class="p-5">
+                        <div class="font-black text-slate-800 text-[10px] uppercase">${row.cliente}</div>
+                        <div class="text-[9px] text-slate-400 font-bold">S/N: ${row.sn_equipo}</div>
+                    </td>
+                    <td class="p-5">
+                        ${row.abastecedor ? `<span class="bg-yellow-400 text-slate-900 text-[9px] px-2 py-0.5 rounded font-black uppercase inline-block mb-1">${row.abastecedor}</span>` : ''}
+                        ${row.atencion_a ? `<div class="text-[9px] text-slate-500 font-bold italic uppercase">Atendido a: ${row.atencion_a}</div>` : ''}
+                    </td>
                     <td class="p-5"><div class="flex flex-wrap gap-1">${row.fallas.map(f => `<span class="bg-blue-50 text-blue-600 text-[9px] px-2 py-0.5 rounded font-bold uppercase">${f}</span>`).join('')}</div></td>
                     <td class="p-5 text-[11px] font-medium text-slate-500 max-w-xs leading-tight">${row.solucion}</td>
                 </tr>`;
@@ -329,27 +352,31 @@
             const { data } = await _supabase.from('incidencias').select('*').order('created_at', {ascending: false});
             const tableData = data.map(r => {
                 const h = new Date(r.created_at).toLocaleTimeString('es-PA', { hour: '2-digit', minute: '2-digit' });
-                return [`${r.fecha_manual} ${h}`, r.tecnico, r.cliente, r.fallas.join(", "), r.solucion];
+                return [`${r.fecha_manual} ${h}`, r.tecnico, r.cliente, r.abastecedor || '-', r.fallas.join(", "), r.solucion];
             });
-            doc.autoTable({ head: [['Fecha/Hora', 'Técnico', 'Cliente', 'Fallas', 'Solución']], body: tableData, theme: 'grid', headStyles: { fillColor: [30, 41, 59] } });
-            doc.save(`Reporte_${getLocalPanamaDate()}.pdf`);
+            doc.autoTable({ head: [['Fecha/Hora', 'Técnico', 'Cliente', 'Abastecedor', 'Fallas', 'Solución']], body: tableData, theme: 'grid', headStyles: { fillColor: [30, 41, 59] } });
+            doc.save(`Reporte_Beta_${getLocalPanamaDate()}.pdf`);
         }
 
         document.getElementById('incidentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit'); 
             btn.disabled = true; btn.innerText = 'GUARDANDO...';
+            
             const detailOtro = document.getElementById('detalleOtro');
             const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => (el.value === 'Otro') ? `OTRO: ${detailOtro.value}` : el.value);
+            
             const payload = {
                 tecnico: document.getElementById('tecnico').value,
                 cliente: document.getElementById('cliente').value,
                 sn_equipo: document.getElementById('sn_equipo').value,
                 abastecedor: document.getElementById('abastecedor').value || null,
+                atencion_a: document.getElementById('atencion_a').value || null,
                 fallas: fallas,
                 solucion: document.getElementById('solucion').value,
                 fecha_manual: document.getElementById('fecha_atencion').value || getLocalPanamaDate()
             };
+
             const { error } = await _supabase.from('incidencias').insert([payload]);
             if(!error) { 
                 showToast("REGISTRO GUARDADO CON ÉXITO"); 
@@ -367,11 +394,14 @@
             document.getElementById('fecha_atencion').value = getLocalPanamaDate();
             const last = localStorage.getItem('saved_tech');
             if(last) document.getElementById('tecnico').value = last;
+            
             fetchSugerencias().then(() => {
                 setupAutoSuggest('cliente', 'suggest-cliente', 'clientes');
                 setupAutoSuggest('sn_equipo', 'suggest-serie', 'series');
                 setupAutoSuggest('abastecedor', 'suggest-abastecedor', 'abastecedores');
+                setupAutoSuggest('atencion_a', 'suggest-atencion', 'atenciones');
             });
+
             document.getElementById('checkOtro').addEventListener('change', (e) => {
                 const det = document.getElementById('detalleOtro');
                 det.classList.toggle('hidden', !e.target.checked);
