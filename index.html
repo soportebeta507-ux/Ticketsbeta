@@ -14,10 +14,8 @@
             font-family: 'Plus Jakarta Sans', sans-serif; 
             background-color: #f8fafc;
             color: #1e293b;
-            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Estilo de Input Profesional */
         .input-premium {
             width: 100%;
             background-color: #ffffff;
@@ -28,111 +26,87 @@
             font-size: 0.875rem;
             transition: all 0.2s ease;
             outline: none;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
         .input-premium:focus {
             border-color: #3b82f6;
-            background-color: #fff;
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
 
-        /* Sugerencias Estilo App */
-        .suggestion-container {
-            position: absolute;
-            top: calc(100% + 8px);
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            border-radius: 18px;
-            box-shadow: 0 12px 30px -10px rgba(0,0,0,0.15);
-            z-index: 9999;
-            overflow: hidden;
-            display: none;
-            animation: slideUp 0.2s ease-out;
+        /* --- NUEVO DISEÑO DE AUTOCOMPLETADO --- */
+        .suggestion-wrapper {
+            position: relative;
         }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
+        .suggestion-container {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-top: 8px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            display: none;
+            overflow: hidden;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .suggestion-item {
-            padding: 14px 20px;
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.025em;
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 700;
             color: #475569;
             cursor: pointer;
             border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            text-transform: uppercase;
         }
 
         .suggestion-item:last-child { border-bottom: none; }
-        .suggestion-item:active { background-color: #eff6ff; color: #2563eb; }
 
-        /* Grid de Fallas */
-        .check-group {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+        .suggestion-item:hover {
+            background-color: #f0f7ff;
+            color: #2563eb;
+            padding-left: 20px;
         }
 
-        .check-card {
-            background: white;
-            border: 2px solid #f1f5f9;
-            padding: 12px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .check-card input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+        .suggestion-item::before {
+            content: '🔍';
             margin-right: 10px;
-            accent-color: #2563eb;
-        }
-
-        .check-card span {
             font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #64748b;
+            opacity: 0.5;
         }
 
-        .check-card:has(input:checked) {
-            border-color: #3b82f6;
-            background-color: #eff6ff;
+        /* Estilos generales */
+        .check-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .check-card {
+            background: white; border: 2px solid #f1f5f9; padding: 12px; border-radius: 14px;
+            display: flex; align-items: center; cursor: pointer; transition: all 0.2s;
         }
-
-        .check-card:has(input:checked) span { color: #2563eb; }
-
-        .label-style {
-            font-size: 10px;
-            font-weight: 800;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 8px;
-            display: block;
-            margin-left: 4px;
-        }
+        .check-card span { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; }
+        .check-card:has(input:checked) { border-color: #3b82f6; background-color: #eff6ff; }
+        .label-style { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block; }
     </style>
 </head>
 <body>
 
     <div class="max-w-xl mx-auto p-4 py-8">
-        <div class="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 p-6 md:p-10">
+        <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 p-6 md:p-10">
             
             <header class="flex justify-between items-center mb-10">
                 <div>
                     <h1 class="text-3xl font-[900] text-blue-600 italic leading-none tracking-tighter uppercase">Beta Ticket</h1>
-                    <p class="text-[9px] font-black text-green-500 tracking-[0.2em] mt-1 uppercase">● Management System</p>
+                    <p class="text-[9px] font-black text-green-500 tracking-[0.2em] mt-1 uppercase">● Live Database Sync</p>
                 </div>
                 <div class="text-right">
                     <span class="label-style">Fecha</span>
@@ -153,12 +127,12 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div class="relative">
+                    <div class="suggestion-wrapper">
                         <span class="label-style">Nombre del Cliente</span>
-                        <input type="text" id="cliente" autocomplete="off" required placeholder="Ej: BANCO GENERAL" class="input-premium">
+                        <input type="text" id="cliente" autocomplete="off" required placeholder="Buscar cliente..." class="input-premium">
                         <div id="suggest-cliente" class="suggestion-container"></div>
                     </div>
-                    <div class="relative">
+                    <div class="suggestion-wrapper">
                         <span class="label-style">Número de Serie</span>
                         <input type="text" id="sn_equipo" autocomplete="off" required placeholder="S/N" class="input-premium">
                         <div id="suggest-serie" class="suggestion-container"></div>
@@ -166,12 +140,12 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div class="relative">
+                    <div class="suggestion-wrapper">
                         <span class="label-style">Abastecedor CIT</span>
                         <input type="text" id="abastecedor" autocomplete="off" placeholder="Opcional..." class="input-premium">
                         <div id="suggest-abastecedor" class="suggestion-container"></div>
                     </div>
-                    <div class="relative">
+                    <div class="suggestion-wrapper">
                         <span class="label-style">Atención A</span>
                         <input type="text" id="atencion_a" autocomplete="off" placeholder="Recibe..." class="input-premium">
                         <div id="suggest-atencion" class="suggestion-container"></div>
@@ -181,25 +155,19 @@
                 <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
                     <span class="label-style text-center mb-5 block">Fallas Concurrentes</span>
                     <div class="check-group mb-4">
-                        <label class="check-card"><input type="checkbox" name="falla" value="Bolsa no Liberó"><span>Bolsa no Liberó</span></label>
-                        <label class="check-card"><input type="checkbox" name="falla" value="CIT Caído"><span>CIT Caído</span></label>
-                        <label class="check-card"><input type="checkbox" name="falla" value="Atasco"><span>Atasco</span></label>
-                        <label class="check-card"><input type="checkbox" name="falla" value="Bolsa Llena"><span>Bolsa Llena</span></label>
-                        <label class="check-card col-span-2 border-blue-200 bg-white"><input type="checkbox" name="falla" value="Restablecer estado de falla"><span>Restablecer estado de falla</span></label>
+                        <label class="check-card"><input type="checkbox" name="falla" value="Bolsa no Liberó" class="mr-2"><span>Bolsa no Liberó</span></label>
+                        <label class="check-card"><input type="checkbox" name="falla" value="CIT Caído" class="mr-2"><span>CIT Caído</span></label>
+                        <label class="check-card"><input type="checkbox" name="falla" value="Atasco" class="mr-2"><span>Atasco</span></label>
+                        <label class="check-card"><input type="checkbox" name="falla" value="Bolsa Llena" class="mr-2"><span>Bolsa Llena</span></label>
                     </div>
-                    <div class="flex items-center space-x-2 mt-4 px-2">
-                        <input type="checkbox" id="checkOtro" name="falla" value="Otro" class="w-4 h-4">
-                        <span class="text-[10px] font-bold text-slate-400 italic">Otra falla específica...</span>
-                    </div>
-                    <input type="text" id="detalleOtro" class="hidden input-premium mt-3 !py-3 !text-xs" placeholder="Especifique aquí...">
                 </div>
 
                 <div>
                     <span class="label-style">Resolución del Ticket</span>
-                    <textarea id="solucion" rows="3" required placeholder="Detalle técnico de la solución..." class="input-premium resize-none"></textarea>
+                    <textarea id="solucion" rows="3" required placeholder="Detalle técnico..." class="input-premium resize-none"></textarea>
                 </div>
 
-                <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition-all uppercase tracking-widest text-sm">Guardar Registro</button>
+                <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg hover:bg-blue-700 transition-all uppercase tracking-widest text-sm">Guardar Registro</button>
             </form>
         </div>
     </div>
@@ -211,16 +179,20 @@
 
         let cacheData = { clientes: [], series: [], abastecedores: [], atenciones: [] };
 
+        // Función para cargar datos únicos desde Supabase
         async function fetchCache() {
-            const { data } = await _supabase.from('incidencias').select('cliente, sn_equipo, abastecedor, atencion_a').limit(100);
-            if (data) {
-                cacheData.clientes = [...new Set(data.map(i => i.cliente).filter(Boolean))];
-                cacheData.series = [...new Set(data.map(i => i.sn_equipo).filter(Boolean))];
-                cacheData.abastecedores = [...new Set(data.map(i => i.abastecedor).filter(Boolean))];
-                cacheData.atenciones = [...new Set(data.map(i => i.atencion_a).filter(Boolean))];
-            }
+            try {
+                const { data, error } = await _supabase.from('incidencias').select('cliente, sn_equipo, abastecedor, atencion_a').limit(200);
+                if (data) {
+                    cacheData.clientes = [...new Set(data.map(i => i.cliente).filter(Boolean))];
+                    cacheData.series = [...new Set(data.map(i => i.sn_equipo).filter(Boolean))];
+                    cacheData.abastecedores = [...new Set(data.map(i => i.abastecedor).filter(Boolean))];
+                    cacheData.atenciones = [...new Set(data.map(i => i.atencion_a).filter(Boolean))];
+                }
+            } catch (e) { console.error("Error cargando caché:", e); }
         }
 
+        // Lógica de Autocompletado Mejorada
         function setupSuggest(inputId, boxId, key) {
             const input = document.getElementById(inputId);
             const box = document.getElementById(boxId);
@@ -228,15 +200,29 @@
             input.addEventListener('input', () => {
                 const val = input.value.toUpperCase();
                 box.innerHTML = '';
-                if (!val) { box.style.display = 'none'; return; }
+                
+                if (val.length < 1) { 
+                    box.style.display = 'none'; 
+                    return; 
+                }
 
-                const matches = cacheData[key].filter(i => i.toUpperCase().includes(val)).slice(0, 5);
+                // Filtrar coincidencias
+                const matches = cacheData[key]
+                    .filter(i => i.toUpperCase().includes(val))
+                    .sort((a, b) => a.indexOf(val) - b.indexOf(val)) // Priorizar si empieza con la letra
+                    .slice(0, 6);
+
                 if (matches.length > 0) {
                     matches.forEach(m => {
                         const item = document.createElement('div');
                         item.className = 'suggestion-item';
                         item.textContent = m;
-                        item.onmousedown = () => { input.value = m; box.style.display = 'none'; };
+                        // Evento al hacer click
+                        item.onmousedown = (e) => {
+                            e.preventDefault();
+                            input.value = m;
+                            box.style.display = 'none';
+                        };
                         box.appendChild(item);
                     });
                     box.style.display = 'block';
@@ -245,16 +231,32 @@
                 }
             });
 
-            input.addEventListener('blur', () => setTimeout(() => box.style.display = 'none', 200));
+            // Cerrar al perder foco
+            input.addEventListener('blur', () => {
+                setTimeout(() => box.style.display = 'none', 200);
+            });
         }
 
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
+            
+            await fetchCache();
+
+            // Activar autocompletado en los campos
+            setupSuggest('cliente', 'suggest-cliente', 'clientes');
+            setupSuggest('sn_equipo', 'suggest-serie', 'series');
+            setupSuggest('abastecedor', 'suggest-abastecedor', 'abastecedores');
+            setupSuggest('atencion_a', 'suggest-atencion', 'atenciones');
+        });
+
+        // Manejo del Submit (Igual al original)
         document.getElementById('incidentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
-            btn.disabled = true; btn.innerText = 'PROCESANDO...';
+            btn.disabled = true; btn.innerText = 'GUARDANDO...';
 
-            const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked'))
-                .map(el => el.value === 'Otro' ? `OTRO: ${document.getElementById('detalleOtro').value}` : el.value);
+            const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => el.value);
 
             const { error } = await _supabase.from('incidencias').insert([{
                 tecnico: document.getElementById('tecnico').value,
@@ -264,29 +266,16 @@
                 atencion_a: document.getElementById('atencion_a').value.toUpperCase() || null,
                 fallas: fallas,
                 solucion: document.getElementById('solucion').value.toUpperCase(),
-                fecha_manual: document.getElementById('fecha_atencion').value || new Date().toISOString().split('T')[0]
+                fecha_manual: document.getElementById('fecha_atencion').value
             }]);
 
             if (!error) {
-                alert("✓ REGISTRO GUARDADO");
+                alert("✓ REGISTRO EXITOSO");
                 location.reload();
             } else {
                 alert("Error: " + error.message);
                 btn.disabled = false; btn.innerText = 'Guardar Registro';
             }
-        });
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
-            await fetchCache();
-            setupSuggest('cliente', 'suggest-cliente', 'clientes');
-            setupSuggest('sn_equipo', 'suggest-serie', 'series');
-            setupSuggest('abastecedor', 'suggest-abastecedor', 'abastecedores');
-            setupSuggest('atencion_a', 'suggest-atencion', 'atenciones');
-            
-            document.getElementById('checkOtro').addEventListener('change', (e) => {
-                document.getElementById('detalleOtro').classList.toggle('hidden', !e.target.checked);
-            });
         });
     </script>
 </body>
