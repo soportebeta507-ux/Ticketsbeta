@@ -20,8 +20,8 @@
         
         #logo-btn { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 
-        /* LISTAS DESPLEGABLES UNIFICADAS */
-        .custom-options-container {
+        /* LISTAS Y SUGERENCIAS */
+        .custom-options-container, .suggestion-box {
             position: absolute;
             top: 105%;
             left: 0;
@@ -37,7 +37,7 @@
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
         }
 
-        .option-item {
+        .option-item, .suggestion-item {
             padding: 1rem;
             cursor: pointer;
             font-size: 11px;
@@ -45,36 +45,22 @@
             color: #334155;
             text-transform: uppercase;
             border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s;
         }
-        .option-item:hover { background: #2563eb; color: white; }
+        .option-item:hover, .suggestion-item:hover { background: #2563eb; color: white; }
 
-        /* PIN KEYPAD OPTIMIZADO */
         .pin-dot { width: 16px; height: 16px; border: 2px solid #cbd5e1; border-radius: 50%; transition: all 0.2s; }
         .pin-dot.filled { background: #2563eb; border-color: #2563eb; transform: scale(1.2); }
         
         .num-btn { 
-            width: 72px; 
-            height: 72px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            border-radius: 50%; 
-            background: #f8fafc; 
-            font-size: 1.5rem;
-            font-weight: 900; 
-            border: 1px solid #f1f5f9; 
-            cursor: pointer; 
-            transition: all 0.1s; 
-            color: #1e293b;
+            width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; 
+            border-radius: 50%; background: #f8fafc; font-size: 1.5rem; font-weight: 900; 
+            border: 1px solid #f1f5f9; cursor: pointer; transition: all 0.1s; color: #1e293b;
         }
-        .num-btn:active, .num-btn.key-pressed { background: #e2e8f0; transform: scale(0.92); border-color: #cbd5e1; }
+        .num-btn:active, .num-btn.key-pressed { background: #e2e8f0; transform: scale(0.92); }
 
         .admin-label { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 0.5rem; margin-bottom: 0.25rem; display: block; }
         
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .animate-blink { animation: blink 1.5s infinite; }
-        
-        /* Ajuste de Tabla Admin */
         .table-fixed-col { width: 130px; }
         .table-medium-col { width: 180px; }
 
@@ -90,16 +76,13 @@
     <div id="main-app" class="glass-card w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 md:p-10 border border-slate-200">
         <header class="mb-8">
             <div class="flex justify-between items-start mb-6">
-                <div id="logo-btn" class="cursor-pointer active:scale-95 transition-transform">
+                <div id="logo-btn" class="cursor-pointer">
                     <h1 class="text-3xl font-black text-blue-600 tracking-tighter italic uppercase leading-none">Beta Ticket</h1>
-                    <div class="flex items-center space-x-2 mt-1">
-                        <div class="h-2 w-2 rounded-full bg-green-500 animate-blink"></div>
-                        <span class="text-[10px] font-black text-green-600 uppercase tracking-widest">Management System</span>
-                    </div>
+                    <span class="text-[10px] font-black text-green-600 uppercase tracking-widest mt-1 block">Management System</span>
                 </div>
                 <div class="flex flex-col items-end">
                     <span class="admin-label">Fecha Atención</span>
-                    <input type="date" id="fecha_atencion" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-bold text-slate-600 outline-none shadow-sm">
+                    <input type="date" id="fecha_atencion" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-bold text-slate-600 outline-none">
                 </div>
             </div>
             <hr class="border-slate-100">
@@ -108,7 +91,7 @@
         <form id="incidentForm" class="space-y-6" autocomplete="off">
             <div class="relative">
                 <span class="admin-label">Personal a Cargo</span>
-                <div id="form-tech-trigger" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer flex justify-between items-center transition-all hover:bg-white focus-within:ring-2 focus-within:ring-blue-500">
+                <div id="form-tech-trigger" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer flex justify-between items-center transition-all hover:bg-white">
                     <span id="form-tech-text" class="font-bold text-slate-400">Seleccione el técnico...</span>
                     <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
@@ -125,19 +108,20 @@
                 <div class="relative">
                     <span class="admin-label">Nombre del Cliente</span>
                     <input type="text" id="cliente" required placeholder="Ej: Novey" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
-                    <div id="suggest-cliente" class="suggestion-box hidden absolute w-full bg-white border border-slate-100 rounded-xl shadow-lg z-50 mt-1"></div>
+                    <div id="suggest-cliente" class="suggestion-box hidden"></div>
                 </div>
                 <div class="relative">
                     <span class="admin-label">Número de Serie</span>
                     <input type="text" id="sn_equipo" required placeholder="S/N" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
-                    <div id="suggest-sn" class="suggestion-box hidden absolute w-full bg-white border border-slate-100 rounded-xl shadow-lg z-50 mt-1"></div>
+                    <div id="suggest-sn" class="suggestion-box hidden"></div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="relative">
                     <span class="admin-label">Abastecedor CIT (Opcional)</span>
-                    <input type="text" id="abastecedor" placeholder="Nombre CIT..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none italic text-slate-500 focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="abastecedor" placeholder="Nombre CIT..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500">
+                    <div id="suggest-abastecedor" class="suggestion-box hidden"></div>
                 </div>
                 <div class="relative">
                     <span class="admin-label">Atención a (Nombre)</span>
@@ -148,65 +132,41 @@
             <div class="bg-blue-50/40 p-6 rounded-[2rem] border border-blue-100">
                 <p class="text-[10px] font-black text-blue-500 uppercase mb-4 text-center tracking-widest">Fallas Concurrentes</p>
                 <div class="grid grid-cols-2 gap-3 mb-4">
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-100 cursor-pointer active:scale-95 transition-transform"><input type="checkbox" name="falla" value="Bolsa no Liberó" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa no Liberó</span></label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-100 cursor-pointer active:scale-95 transition-transform"><input type="checkbox" name="falla" value="CIT Caído" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">CIT Caído</span></label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-100 cursor-pointer active:scale-95 transition-transform"><input type="checkbox" name="falla" value="Atasco" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Atasco</span></label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-100 cursor-pointer active:scale-95 transition-transform"><input type="checkbox" name="falla" value="Bolsa Llena" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa Llena</span></label>
-                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-orange-200 cursor-pointer col-span-2 active:scale-95 transition-transform"><input type="checkbox" name="falla" value="Restablecer estado de falla" class="w-4 h-4 text-orange-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase text-orange-600">Restablecer estado de falla</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-100 cursor-pointer"><input type="checkbox" name="falla" value="Bolsa no Liberó" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa no Liberó</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-100 cursor-pointer"><input type="checkbox" name="falla" value="CIT Caído" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">CIT Caído</span></label>
                 </div>
                 <label class="flex items-center space-x-3 mb-2 cursor-pointer"><input type="checkbox" id="checkOtro" name="falla" value="Otro" class="w-4 h-4 text-orange-500 rounded"><span class="text-slate-500 text-[10px] font-black uppercase">Otra falla específica</span></label>
-                <input type="text" id="detalleOtro" class="hidden w-full p-3 bg-white border border-orange-200 rounded-xl outline-none text-sm" placeholder="Describa el problema...">
+                <input type="text" id="detalleOtro" class="hidden w-full p-3 bg-white border border-orange-200 rounded-xl outline-none text-sm" placeholder="Escriba aquí...">
             </div>
 
             <div class="relative">
                 <span class="admin-label">Resolución del Ticket</span>
-                <textarea id="solucion" rows="3" required placeholder="Detalle la solución técnica..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none resize-none font-medium focus:ring-2 focus:ring-blue-500"></textarea>
+                <textarea id="solucion" rows="3" required placeholder="Detalle la solución..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none resize-none font-medium focus:ring-2 focus:ring-blue-500"></textarea>
             </div>
             
-            <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-100 uppercase tracking-widest text-sm active:scale-[0.98] transition-all">Guardar Registro Técnico</button>
+            <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-100 uppercase tracking-widest text-sm">Guardar Registro Técnico</button>
         </form>
     </div>
 
     <div id="pin-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white p-10 rounded-[3.5rem] shadow-2xl w-[350px] text-center">
             <h3 class="text-xl font-black text-slate-800 uppercase tracking-tighter mb-8 italic">Acceso Administrador</h3>
-            
             <div class="flex justify-center gap-5 mb-10">
-                <div class="pin-dot" id="dot-0"></div>
-                <div class="pin-dot" id="dot-1"></div>
-                <div class="pin-dot" id="dot-2"></div>
-                <div class="pin-dot" id="dot-3"></div>
+                <div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div><div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div>
             </div>
-
             <div class="grid grid-cols-3 gap-5 justify-items-center">
-                <button onclick="pressNum('1')" id="key-1" class="num-btn">1</button>
-                <button onclick="pressNum('2')" id="key-2" class="num-btn">2</button>
-                <button onclick="pressNum('3')" id="key-3" class="num-btn">3</button>
-                
-                <button onclick="pressNum('4')" id="key-4" class="num-btn">4</button>
-                <button onclick="pressNum('5')" id="key-5" class="num-btn">5</button>
-                <button onclick="pressNum('6')" id="key-6" class="num-btn">6</button>
-                
-                <button onclick="pressNum('7')" id="key-7" class="num-btn">7</button>
-                <button onclick="pressNum('8')" id="key-8" class="num-btn">8</button>
-                <button onclick="pressNum('9')" id="key-9" class="num-btn">9</button>
-                
-                <button onclick="clearPin()" class="num-btn bg-red-50 text-red-500 border-red-100"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"></path></svg></button>
-                <button onclick="pressNum('0')" id="key-0" class="num-btn">0</button>
-                <button onclick="closePin()" class="num-btn bg-slate-100 text-slate-400 border-slate-200">✕</button>
+                <button onclick="pressNum('1')" id="key-1" class="num-btn">1</button><button onclick="pressNum('2')" id="key-2" class="num-btn">2</button><button onclick="pressNum('3')" id="key-3" class="num-btn">3</button>
+                <button onclick="pressNum('4')" id="key-4" class="num-btn">4</button><button onclick="pressNum('5')" id="key-5" class="num-btn">5</button><button onclick="pressNum('6')" id="key-6" class="num-btn">6</button>
+                <button onclick="pressNum('7')" id="key-7" class="num-btn">7</button><button onclick="pressNum('8')" id="key-8" class="num-btn">8</button><button onclick="pressNum('9')" id="key-9" class="num-btn">9</button>
+                <button onclick="clearPin()" class="num-btn bg-red-50 text-red-500 border-red-100">←</button><button onclick="pressNum('0')" id="key-0" class="num-btn">0</button><button onclick="closePin()" class="num-btn">✕</button>
             </div>
-            
-            <p class="mt-8 text-[9px] font-black text-slate-300 uppercase tracking-widest">Soporta teclado numérico</p>
         </div>
     </div>
 
     <div id="admin-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-2 md:p-4">
         <div class="bg-white w-full max-w-7xl max-h-[96vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
             <div class="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-white">
-                <div>
-                    <h2 class="text-2xl font-black text-slate-800 tracking-tighter italic uppercase">Beta <span class="text-blue-600">Admin</span></h2>
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Panel de Control General</p>
-                </div>
+                <div><h2 class="text-2xl font-black text-slate-800 italic uppercase">Beta <span class="text-blue-600">Admin</span></h2></div>
                 <button onclick="closeAdmin()" class="bg-slate-100 p-3 rounded-full text-slate-400 hover:text-red-500 transition-all">✕</button>
             </div>
             <div class="p-4 md:p-8 overflow-y-auto flex-1 bg-slate-50">
@@ -216,23 +176,19 @@
                             <span class="admin-label">Filtrar por Técnico</span>
                             <div id="admin-tech-trigger" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer flex justify-between items-center">
                                 <span id="admin-tech-text" class="text-[10px] font-black text-slate-600 uppercase">Todos los Técnicos</span>
-                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
                             </div>
                             <div id="admin-tech-options" class="custom-options-container hidden">
                                 <div class="option-item" data-value="Todos">TODOS LOS TÉCNICOS</div>
                                 <div class="option-item" data-value="Adriel Aizpurua">ADRIEL AIZPURUA</div>
                                 <div class="option-item" data-value="Ellery Mendoza">ELLERY MENDOZA</div>
                                 <div class="option-item" data-value="Axel De Leon">AXEL DE LEON</div>
-                                <div class="option-item" data-value="Ismael Peñalba">ISMAEL PEÑALBA</div>
                             </div>
                         </div>
-                        <div class="bg-blue-600 p-4 rounded-2xl text-center">
-                            <span id="record-count" class="text-3xl font-black text-white">0</span>
-                            <p class="text-[8px] font-black text-blue-100 uppercase mt-1">Total de Casos</p>
-                        </div>
-                        <button onclick="downloadPDF()" class="w-full bg-slate-800 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest hover:bg-black transition-all">Generar PDF</button>
+                        <div class="bg-blue-600 p-4 rounded-2xl text-center"><span id="record-count" class="text-3xl font-black text-white">0</span></div>
+                        <button onclick="downloadPDF()" class="w-full bg-slate-800 text-white font-black py-4 rounded-xl text-xs uppercase hover:bg-black transition-all">Generar PDF</button>
                     </div>
-                    <div class="lg:col-span-3 bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm min-h-[350px]">
+                    <div class="lg:col-span-3 bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm min-h-[300px]">
                         <canvas id="statsChart"></canvas>
                     </div>
                 </div>
@@ -242,11 +198,11 @@
                         <table class="w-full text-left text-sm border-collapse">
                             <thead class="bg-slate-800 text-white font-black uppercase text-[9px] tracking-widest">
                                 <tr>
-                                    <th class="p-5 table-fixed-col">Fecha / Hora</th>
+                                    <th class="p-5 table-fixed-col">Fecha</th>
                                     <th class="p-5 table-fixed-col">Técnico</th>
                                     <th class="p-5 table-medium-col">Cliente / Info</th>
-                                    <th class="p-5 table-medium-col">Fallas Detectadas</th>
-                                    <th class="p-5">Solución Técnica</th>
+                                    <th class="p-5 table-medium-col">Fallas</th>
+                                    <th class="p-5">Solución</th>
                                 </tr>
                             </thead>
                             <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
@@ -267,97 +223,67 @@
         let currentPin = "";
         const MASTER_PIN = "2026";
         let currentFilterTech = "Todos";
-        let dataHistory = { clientes: [], seriales: [] };
+        let dataHistory = { clientes: [], seriales: [], abastecedores: [] };
 
         function showToast(msg) {
             const c = document.getElementById('toast-container');
             const t = document.createElement('div');
             t.className = 'toast';
-            t.innerHTML = `<span class="font-black text-[10px] text-slate-800 uppercase tracking-widest">${msg}</span>`;
+            t.innerHTML = `<span class="font-black text-[10px] uppercase tracking-widest">${msg}</span>`;
             c.appendChild(t);
             setTimeout(() => t.classList.add('active'), 10);
             setTimeout(() => { t.classList.remove('active'); setTimeout(() => t.remove(), 400); }, 3000);
         }
 
-        /* --- LOGICA DEL PIN Y TECLADO FISICO --- */
-        function pressNum(n) {
-            if(currentPin.length < 4) {
-                currentPin += n;
-                updatePinDots();
-                if(currentPin.length === 4) setTimeout(validatePin, 200);
+        /* --- SUGERENCIAS RESTAURADAS --- */
+        async function fetchHistory() {
+            const { data } = await _supabase.from('incidencias').select('cliente, sn_equipo, abastecedor');
+            if (data) {
+                dataHistory.clientes = [...new Set(data.map(r => r.cliente))];
+                dataHistory.seriales = [...new Set(data.map(r => r.sn_equipo))];
+                dataHistory.abastecedores = [...new Set(data.map(r => r.abastecedor).filter(Boolean))];
             }
         }
 
-        function updatePinDots() {
-            for(let i=0; i<4; i++) {
-                document.getElementById(`dot-${i}`).classList.toggle('filled', i < currentPin.length);
-            }
-        }
+        function setupSuggestions(inputId, suggestId, dataKey) {
+            const input = document.getElementById(inputId);
+            const box = document.getElementById(suggestId);
 
-        function clearPin() {
-            currentPin = currentPin.slice(0, -1);
-            updatePinDots();
-        }
+            input.addEventListener('input', () => {
+                const val = input.value.toLowerCase();
+                box.innerHTML = '';
+                if (!val) { box.classList.add('hidden'); return; }
 
-        function validatePin() {
-            if(currentPin === MASTER_PIN) {
-                closePin();
-                document.getElementById('admin-modal').classList.add('active');
-                loadAdminData();
-            } else {
-                showToast("PIN INCORRECTO");
-                currentPin = "";
-                updatePinDots();
-            }
-        }
-
-        // Listener para teclado Desktop
-        document.addEventListener('keydown', (e) => {
-            const pinModal = document.getElementById('pin-modal');
-            if (!pinModal.classList.contains('active')) return;
-
-            // Números del 0 al 9 (Teclado normal y numérico)
-            if (e.key >= '0' && e.key <= '9') {
-                const btn = document.getElementById(`key-${e.key}`);
-                if(btn) {
-                    btn.classList.add('key-pressed');
-                    setTimeout(() => btn.classList.remove('key-pressed'), 100);
-                }
-                pressNum(e.key);
-            }
-            // Borrar
-            if (e.key === 'Backspace') clearPin();
-            // Cerrar
-            if (e.key === 'Escape') closePin();
-        });
-
-        function closePin() { document.getElementById('pin-modal').classList.remove('active'); currentPin = ""; updatePinDots(); }
-        function closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); }
-
-        /* --- LOGICA DE FORMULARIO Y SELECTS --- */
-        function setupCustomSelect(triggerId, optionsId, textId, hiddenInputId = null, isAdmin = false) {
-            const trigger = document.getElementById(triggerId);
-            const options = document.getElementById(optionsId);
-            const text = document.getElementById(textId);
-
-            trigger.onclick = (e) => {
-                e.stopPropagation();
-                document.querySelectorAll('.custom-options-container').forEach(c => { if(c !== options) c.classList.add('hidden'); });
-                options.classList.toggle('hidden');
-            };
-
-            options.querySelectorAll('.option-item').forEach(opt => {
-                opt.onclick = () => {
-                    const val = opt.getAttribute('data-value');
-                    text.innerText = isAdmin ? val.toUpperCase() : val;
-                    if(!isAdmin) text.classList.replace('text-slate-400', 'text-slate-700');
-                    if(hiddenInputId) document.getElementById(hiddenInputId).value = val;
-                    if(isAdmin) { currentFilterTech = val; loadAdminData(); }
-                    options.classList.add('hidden');
-                };
+                const filtered = dataHistory[dataKey].filter(i => i && i.toLowerCase().includes(val)).slice(0, 5);
+                if (filtered.length > 0) {
+                    filtered.forEach(item => {
+                        const d = document.createElement('div');
+                        d.className = 'suggestion-item';
+                        d.innerText = item;
+                        d.onclick = () => { input.value = item; box.classList.add('hidden'); };
+                        box.appendChild(d);
+                    });
+                    box.classList.remove('hidden');
+                } else box.classList.add('hidden');
             });
         }
 
+        /* --- PIN KEYBOARD --- */
+        function pressNum(n) { if(currentPin.length < 4) { currentPin += n; updatePinDots(); if(currentPin.length === 4) setTimeout(validatePin, 200); } }
+        function updatePinDots() { for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).classList.toggle('filled', i < currentPin.length); }
+        function clearPin() { currentPin = currentPin.slice(0, -1); updatePinDots(); }
+        function validatePin() {
+            if(currentPin === MASTER_PIN) { closePin(); document.getElementById('admin-modal').classList.add('active'); loadAdminData(); }
+            else { showToast("PIN INCORRECTO"); currentPin = ""; updatePinDots(); }
+        }
+        document.addEventListener('keydown', (e) => {
+            if (!document.getElementById('pin-modal').classList.contains('active')) return;
+            if (e.key >= '0' && e.key <= '9') pressNum(e.key);
+            if (e.key === 'Backspace') clearPin();
+            if (e.key === 'Escape') closePin();
+        });
+
+        /* --- ADMIN Y FORM --- */
         async function loadAdminData() {
             let query = _supabase.from('incidencias').select('*').order('created_at', { ascending: false });
             if (currentFilterTech !== "Todos") query = query.eq('tecnico', currentFilterTech);
@@ -384,26 +310,33 @@
             }).join('');
         }
 
+        function setupCustomSelect(triggerId, optionsId, textId, hiddenInputId = null, isAdmin = false) {
+            const trigger = document.getElementById(triggerId);
+            const options = document.getElementById(optionsId);
+            const text = document.getElementById(textId);
+            trigger.onclick = (e) => { e.stopPropagation(); options.classList.toggle('hidden'); };
+            options.querySelectorAll('.option-item').forEach(opt => {
+                opt.onclick = () => {
+                    const val = opt.getAttribute('data-value');
+                    text.innerText = isAdmin ? val.toUpperCase() : val;
+                    if(!isAdmin) text.classList.replace('text-slate-400', 'text-slate-700');
+                    if(hiddenInputId) document.getElementById(hiddenInputId).value = val;
+                    if(isAdmin) { currentFilterTech = val; loadAdminData(); }
+                    options.classList.add('hidden');
+                };
+            });
+        }
+
         function updateChart(data) {
             const ctx = document.getElementById('statsChart').getContext('2d');
             const counts = {}; data.forEach(r => counts[r.tecnico] = (counts[r.tecnico] || 0) + 1);
             if(myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: Object.keys(counts), datasets: [{ label: 'Tickets', data: Object.values(counts), backgroundColor: '#2563eb', borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
+            myChart = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(counts), datasets: [{ label: 'Tickets', data: Object.values(counts), backgroundColor: '#2563eb', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
         }
 
-        async function downloadPDF() {
-            const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
-            const { data } = await _supabase.from('incidencias').select('*').order('created_at', {ascending: false});
-            doc.text("REPORTE BETA TICKET - CONTROL DE CALIDAD", 14, 15);
-            doc.autoTable({ head: [['Fecha', 'Técnico', 'Cliente', 'Info', 'Fallas', 'Solución']], body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, `Atención: ${r.atencion_a || 'N/A'}`, r.fallas.join(", "), r.solucion]), theme: 'grid', headStyles: { fillColor: [30, 41, 59] } });
-            doc.save(`Reporte_Beta_Tickets.pdf`);
-        }
+        function closePin() { document.getElementById('pin-modal').classList.remove('active'); currentPin = ""; updatePinDots(); }
+        function closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); }
 
-        // Eventos de inicio
         document.getElementById('logo-btn').addEventListener('mousedown', () => pressTimer = setTimeout(() => { document.getElementById('pin-modal').classList.add('active'); }, 1500));
         document.getElementById('logo-btn').addEventListener('mouseup', () => clearTimeout(pressTimer));
         document.getElementById('logo-btn').addEventListener('touchstart', () => pressTimer = setTimeout(() => { document.getElementById('pin-modal').classList.add('active'); }, 1500));
@@ -412,38 +345,31 @@
         document.getElementById('incidentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = 'GUARDANDO...';
-            const detailOtro = document.getElementById('detalleOtro');
-            const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => (el.value === 'Otro') ? `OTRO: ${detailOtro.value}` : el.value);
-
-            const payload = {
+            const { error } = await _supabase.from('incidencias').insert([{
                 tecnico: document.getElementById('tecnico').value,
                 cliente: document.getElementById('cliente').value,
                 sn_equipo: document.getElementById('sn_equipo').value,
                 abastecedor: document.getElementById('abastecedor').value || null,
                 atencion_a: document.getElementById('atencion_a').value || null,
-                fallas: fallas,
+                fallas: Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => (el.value === 'Otro') ? `OTRO: ${document.getElementById('detalleOtro').value}` : el.value),
                 solucion: document.getElementById('solucion').value,
                 fecha_manual: document.getElementById('fecha_atencion').value
-            };
-
-            const { error } = await _supabase.from('incidencias').insert([payload]);
-            if(!error) { 
-                showToast("REGISTRO EXITOSO"); 
-                e.target.reset(); 
-                document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
-                document.getElementById('form-tech-text').innerText = "Seleccione el técnico...";
-                document.getElementById('form-tech-text').classList.replace('text-slate-700', 'text-slate-400');
-            }
-            btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO TÉCNICO';
+            }]);
+            if(!error) { showToast("REGISTRO EXITOSO"); e.target.reset(); fetchHistory(); }
+            btn.disabled = false; btn.innerText = 'Guardar Registro Técnico';
         });
 
-        document.addEventListener('click', () => { document.querySelectorAll('.custom-options-container').forEach(c => c.classList.add('hidden')); });
+        document.addEventListener('click', () => { document.querySelectorAll('.custom-options-container, .suggestion-box').forEach(c => c.classList.add('hidden')); });
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
             document.getElementById('checkOtro').addEventListener('change', (e) => document.getElementById('detalleOtro').classList.toggle('hidden', !e.target.checked));
             setupCustomSelect('form-tech-trigger', 'form-tech-options', 'form-tech-text', 'tecnico', false);
             setupCustomSelect('admin-tech-trigger', 'admin-tech-options', 'admin-tech-text', null, true);
+            fetchHistory();
+            setupSuggestions('cliente', 'suggest-cliente', 'clientes');
+            setupSuggestions('sn_equipo', 'suggest-sn', 'seriales');
+            setupSuggestions('abastecedor', 'suggest-abastecedor', 'abastecedores');
         });
     </script>
 </body>
