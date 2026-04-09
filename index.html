@@ -14,7 +14,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* CORRECCIÓN: Z-index elevado y fondo sólido para sugerencias */
         .suggestion-box {
             position: absolute;
             z-index: 999;
@@ -119,12 +118,13 @@
             </div>
             
             <div class="bg-blue-50/40 p-6 rounded-[2rem] border border-blue-100/50">
-                <p class="text-[10px] font-black text-blue-500 uppercase mb-4 text-center tracking-widest">Diagnóstico de Fallas</p>
+                <p class="text-[10px] font-black text-blue-500 uppercase mb-4 text-center tracking-widest">Fallas Concurrentes</p>
                 <div class="grid grid-cols-2 gap-3 mb-4">
                     <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm"><input type="checkbox" name="falla" value="Bolsa no Liberó" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa no Liberó</span></label>
                     <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm"><input type="checkbox" name="falla" value="CIT Caído" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">CIT Caído</span></label>
                     <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm"><input type="checkbox" name="falla" value="Atasco" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Atasco</span></label>
                     <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm"><input type="checkbox" name="falla" value="Bolsa Llena" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa Llena</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-50 cursor-pointer hover:shadow-sm col-span-2"><input type="checkbox" name="falla" value="Restablecer estado de falla" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Restablecer estado de falla</span></label>
                 </div>
                 <label class="flex items-center space-x-3 mb-2 cursor-pointer"><input type="checkbox" id="checkOtro" name="falla" value="Otro" class="w-4 h-4 text-orange-500 rounded"><span class="text-slate-500 text-[10px] font-black uppercase">Otra falla específica</span></label>
                 <input type="text" id="detalleOtro" class="hidden w-full p-3 bg-white border border-orange-200 rounded-xl outline-none text-sm" placeholder="Describa el problema...">
@@ -165,6 +165,7 @@
                 </div>
                 <button onclick="closeAdmin()" class="bg-slate-100 p-3 rounded-full text-slate-400 hover:text-red-500 transition-all">✕</button>
             </div>
+
             <div class="p-4 md:p-8 overflow-y-auto flex-1 bg-slate-50">
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm space-y-5">
@@ -196,6 +197,7 @@
                         <canvas id="statsChart"></canvas>
                     </div>
                 </div>
+
                 <div class="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm min-w-[1100px]">
@@ -243,14 +245,9 @@
             setTimeout(() => { t.classList.remove('active'); setTimeout(() => t.remove(), 400); }, 3000);
         }
 
-        // CORRECCIÓN: Función asíncrona para cargar datos de sugerencias
         async function fetchSugerencias() {
             const { data, error } = await _supabase.from('incidencias').select('cliente, sn_equipo, abastecedor, atencion_a');
-            if (error) {
-                console.error("Error cargando sugerencias:", error);
-                return;
-            }
-            if (data) {
+            if (!error && data) {
                 cacheData.clientes = [...new Set(data.map(i => i.cliente).filter(Boolean))];
                 cacheData.series = [...new Set(data.map(i => i.sn_equipo).filter(Boolean))];
                 cacheData.abastecedores = [...new Set(data.map(i => i.abastecedor).filter(Boolean))];
@@ -258,48 +255,28 @@
             }
         }
 
-        // CORRECCIÓN: Lógica de autocompletado mejorada
         function setupAutoSuggest(inputId, boxId, dataKey) {
             const input = document.getElementById(inputId);
             const box = document.getElementById(boxId);
-            
             input.addEventListener('input', (e) => {
                 const val = e.target.value.toLowerCase().trim();
                 box.innerHTML = '';
-                
-                if (val.length < 1) { 
-                    box.style.display = 'none'; 
-                    return; 
-                }
-
-                const matches = cacheData[dataKey].filter(item => 
-                    String(item).toLowerCase().includes(val)
-                ).slice(0, 5);
-
+                if (val.length < 1) { box.style.display = 'none'; return; }
+                const matches = cacheData[dataKey].filter(item => String(item).toLowerCase().includes(val)).slice(0, 5);
                 if (matches.length > 0) {
                     matches.forEach(match => {
                         const div = document.createElement('div');
                         div.className = 'suggestion-item';
                         div.textContent = match;
-                        div.onclick = () => { 
-                            input.value = match; 
-                            box.style.display = 'none'; 
-                        };
+                        div.onclick = () => { input.value = match; box.style.display = 'none'; };
                         box.appendChild(div);
                     });
                     box.style.display = 'block';
-                    box.style.zIndex = "999"; 
-                } else { 
-                    box.style.display = 'none'; 
-                }
+                } else { box.style.display = 'none'; }
             });
-
-            document.addEventListener('click', (e) => { 
-                if (!input.contains(e.target) && !box.contains(e.target)) box.style.display = 'none'; 
-            });
+            document.addEventListener('click', (e) => { if (!input.contains(e.target) && !box.contains(e.target)) box.style.display = 'none'; });
         }
 
-        // Acceso Admin
         const logoBtn = document.getElementById('logo-btn');
         const triggerPin = () => { currentPin = ""; updatePinDots(); document.getElementById('pin-modal').classList.add('active'); };
         logoBtn.addEventListener('mousedown', () => pressTimer = setTimeout(triggerPin, 2000));
@@ -337,10 +314,10 @@
             tbody.innerHTML = (data || []).map(row => {
                 const hora = new Date(row.created_at).toLocaleTimeString('es-PA', { hour: '2-digit', minute: '2-digit', hour12: true });
                 return `<tr class="hover:bg-slate-50 border-b border-slate-50">
-                    <td class="p-5"><div class="font-black text-blue-600 text-xs">${row.fecha_manual}</div><div class="text-[10px] text-slate-400 font-bold uppercase">${hora}</div></td>
+                    <td class="p-5"><div class="font-black text-blue-600 text-xs">${row.fecha_manual}</div><div class="text-[10px] text-slate-400 uppercase font-bold italic">${hora}</div></td>
                     <td class="p-5 font-bold text-slate-700 text-xs">${row.tecnico}</td>
                     <td class="p-5"><div class="font-black text-slate-800 text-[10px] uppercase">${row.cliente}</div><div class="text-[9px] text-slate-400 font-bold">S/N: ${row.sn_equipo}</div></td>
-                    <td class="p-5">${row.abastecedor ? `<span class="bg-yellow-400 text-[9px] px-2 py-0.5 rounded font-black inline-block mb-1">${row.abastecedor}</span>` : ''} ${row.atencion_a ? `<div class="text-[9px] text-slate-500 font-bold italic uppercase">Atendido a: ${row.atencion_a}</div>` : ''}</td>
+                    <td class="p-5">${row.abastecedor ? `<span class="bg-yellow-400 text-[9px] px-2 py-0.5 rounded font-black inline-block mb-1">${row.abastecedor}</span>` : ''} ${row.atencion_a ? `<div class="text-[9px] text-slate-500 font-bold uppercase italic">Atiende: ${row.atencion_a}</div>` : ''}</td>
                     <td class="p-5"><div class="flex flex-wrap gap-1">${row.fallas.map(f => `<span class="bg-blue-50 text-blue-600 text-[9px] px-2 py-0.5 rounded font-bold uppercase">${f}</span>`).join('')}</div></td>
                     <td class="p-5 text-[11px] font-medium text-slate-500 max-w-xs leading-tight">${row.solucion}</td>
                 </tr>`;
@@ -357,7 +334,7 @@
         async function downloadPDF() {
             const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
             const { data } = await _supabase.from('incidencias').select('*').order('created_at', {ascending: false});
-            const tableData = data.map(r => [`${r.fecha_manual}`, r.tecnico, r.cliente, r.abastecedor || '-', r.fallas.join(", "), r.solucion]);
+            const tableData = data.map(r => [r.fecha_manual, r.tecnico, r.cliente, r.abastecedor || '-', r.fallas.join(", "), r.solucion]);
             doc.autoTable({ head: [['Fecha', 'Técnico', 'Cliente', 'Abastecedor', 'Fallas', 'Solución']], body: tableData, theme: 'grid', headStyles: { fillColor: [30, 41, 59] } });
             doc.save(`Reporte_Beta_${getLocalPanamaDate()}.pdf`);
         }
@@ -380,31 +357,26 @@
             };
             const { error } = await _supabase.from('incidencias').insert([payload]);
             if(!error) { 
-                showToast("REGISTRO GUARDADO CON ÉXITO"); 
+                showToast("REGISTRO GUARDADO"); 
                 localStorage.setItem('saved_tech', payload.tecnico);
                 e.target.reset(); 
                 document.getElementById('tecnico').value = payload.tecnico;
                 document.getElementById('fecha_atencion').value = getLocalPanamaDate();
                 document.getElementById('detalleOtro').classList.add('hidden');
-                await fetchSugerencias(); 
+                await fetchSugerencias();
             } else { alert("Error: " + error.message); }
             btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO TÉCNICO';
         });
 
-        // INICIALIZACIÓN
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('fecha_atencion').value = getLocalPanamaDate();
             const last = localStorage.getItem('saved_tech');
             if(last) document.getElementById('tecnico').value = last;
-            
-            // CORRECCIÓN: Esperar carga de datos antes de activar sugerencias
             await fetchSugerencias();
-            
             setupAutoSuggest('cliente', 'suggest-cliente', 'clientes');
             setupAutoSuggest('sn_equipo', 'suggest-serie', 'series');
             setupAutoSuggest('abastecedor', 'suggest-abastecedor', 'abastecedores');
             setupAutoSuggest('atencion_a', 'suggest-atencion', 'atenciones');
-
             document.getElementById('checkOtro').addEventListener('change', (e) => {
                 const det = document.getElementById('detalleOtro');
                 det.classList.toggle('hidden', !e.target.checked);
