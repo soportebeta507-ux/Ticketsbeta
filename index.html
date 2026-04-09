@@ -2,173 +2,258 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Beta Ticket | Enterprise</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beta Ticket Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: #f8fafc;
-            color: #1e293b;
-        }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .glass-card { background: white; transition: all 0.3s ease; }
+        #admin-modal, #pin-modal { display: none; opacity: 0; transition: all 0.3s ease; z-index: 100; }
+        #admin-modal.active, #pin-modal.active { display: flex; opacity: 1; }
+        
+        #logo-btn { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 
-        .input-premium {
-            width: 100%;
-            background-color: #ffffff;
-            border: 2px solid #f1f5f9;
-            border-radius: 16px;
-            padding: 1rem 1.25rem;
-            font-weight: 700;
-            font-size: 0.875rem;
-            transition: all 0.2s ease;
-            outline: none;
-        }
-
-        .input-premium:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-        }
-
-        /* --- NUEVO DISEÑO DE AUTOCOMPLETADO --- */
-        .suggestion-wrapper {
-            position: relative;
-        }
-
-        .suggestion-container {
+        /* LISTAS DESPLEGABLES UNIFICADAS */
+        .custom-options-container {
             position: absolute;
-            top: 100%;
+            top: 105%;
             left: 0;
             right: 0;
-            background: white;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
             border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            margin-top: 8px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-            display: none;
-            overflow: hidden;
-            animation: fadeIn 0.2s ease-out;
+            border-radius: 1.25rem;
+            margin-top: 0.5rem;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 150;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .suggestion-item {
-            padding: 12px 16px;
-            font-size: 12px;
-            font-weight: 700;
-            color: #475569;
+        .option-item {
+            padding: 1rem;
             cursor: pointer;
-            border-bottom: 1px solid #f1f5f9;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: #334155;
             text-transform: uppercase;
+            border-bottom: 1px solid #f1f5f9;
         }
+        .option-item:hover { background: #2563eb; color: white; }
 
-        .suggestion-item:last-child { border-bottom: none; }
-
-        .suggestion-item:hover {
-            background-color: #f0f7ff;
-            color: #2563eb;
-            padding-left: 20px;
+        /* PIN KEYPAD OPTIMIZADO */
+        .pin-dot { width: 16px; height: 16px; border: 2px solid #cbd5e1; border-radius: 50%; transition: all 0.2s; }
+        .pin-dot.filled { background: #2563eb; border-color: #2563eb; transform: scale(1.2); }
+        
+        .num-btn { 
+            width: 72px; 
+            height: 72px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 50%; 
+            background: #f8fafc; 
+            font-size: 1.5rem;
+            font-weight: 900; 
+            border: 1px solid #f1f5f9; 
+            cursor: pointer; 
+            transition: all 0.1s; 
+            color: #1e293b;
         }
+        .num-btn:active, .num-btn.key-pressed { background: #e2e8f0; transform: scale(0.92); border-color: #cbd5e1; }
 
-        .suggestion-item::before {
-            content: '🔍';
-            margin-right: 10px;
-            font-size: 10px;
-            opacity: 0.5;
-        }
+        .admin-label { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 0.5rem; margin-bottom: 0.25rem; display: block; }
+        
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .animate-blink { animation: blink 1.5s infinite; }
+        
+        /* Ajuste de Tabla Admin */
+        .table-fixed-col { width: 130px; }
+        .table-medium-col { width: 180px; }
 
-        /* Estilos generales */
-        .check-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .check-card {
-            background: white; border: 2px solid #f1f5f9; padding: 12px; border-radius: 14px;
-            display: flex; align-items: center; cursor: pointer; transition: all 0.2s;
-        }
-        .check-card span { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; }
-        .check-card:has(input:checked) { border-color: #3b82f6; background-color: #eff6ff; }
-        .label-style { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block; }
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+        .toast { min-width: 250px; padding: 14px; border-radius: 1rem; background: white; box-shadow: 0 10px 15px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; transform: translateX(120%); transition: transform 0.3s; border-left: 5px solid #10b981; }
+        .toast.active { transform: translateX(0); }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
 
-    <div class="max-w-xl mx-auto p-4 py-8">
-        <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 p-6 md:p-10">
+    <div id="toast-container"></div>
+
+    <div id="main-app" class="glass-card w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 md:p-10 border border-slate-200">
+        <header class="mb-8">
+            <div class="flex justify-between items-start mb-6">
+                <div id="logo-btn" class="cursor-pointer active:scale-95 transition-transform">
+                    <h1 class="text-3xl font-black text-blue-600 tracking-tighter italic uppercase leading-none">Beta Ticket</h1>
+                    <div class="flex items-center space-x-2 mt-1">
+                        <div class="h-2 w-2 rounded-full bg-green-500 animate-blink"></div>
+                        <span class="text-[10px] font-black text-green-600 uppercase tracking-widest">Management System</span>
+                    </div>
+                </div>
+                <div class="flex flex-col items-end">
+                    <span class="admin-label">Fecha Atención</span>
+                    <input type="date" id="fecha_atencion" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-bold text-slate-600 outline-none shadow-sm">
+                </div>
+            </div>
+            <hr class="border-slate-100">
+        </header>
+
+        <form id="incidentForm" class="space-y-6" autocomplete="off">
+            <div class="relative">
+                <span class="admin-label">Personal a Cargo</span>
+                <div id="form-tech-trigger" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer flex justify-between items-center transition-all hover:bg-white focus-within:ring-2 focus-within:ring-blue-500">
+                    <span id="form-tech-text" class="font-bold text-slate-400">Seleccione el técnico...</span>
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div id="form-tech-options" class="custom-options-container hidden">
+                    <div class="option-item" data-value="Adriel Aizpurua">Adriel Aizpurua</div>
+                    <div class="option-item" data-value="Ellery Mendoza">Ellery Mendoza</div>
+                    <div class="option-item" data-value="Axel De Leon">Axel De Leon</div>
+                    <div class="option-item" data-value="Ismael Peñalba">Ismael Peñalba</div>
+                </div>
+                <input type="hidden" id="tecnico" required>
+            </div>
             
-            <header class="flex justify-between items-center mb-10">
-                <div>
-                    <h1 class="text-3xl font-[900] text-blue-600 italic leading-none tracking-tighter uppercase">Beta Ticket</h1>
-                    <p class="text-[9px] font-black text-green-500 tracking-[0.2em] mt-1 uppercase">● Live Database Sync</p>
-                </div>
-                <div class="text-right">
-                    <span class="label-style">Fecha</span>
-                    <input type="date" id="fecha_atencion" class="bg-slate-50 border-none rounded-xl p-2 text-xs font-bold text-slate-600 outline-none">
-                </div>
-            </header>
-
-            <form id="incidentForm" class="space-y-6">
-                
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="relative">
-                    <span class="label-style">Personal a Cargo</span>
-                    <select id="tecnico" required class="input-premium appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%207.5L10%2012.5L15%207.5%22%20stroke%3D%22%2394A3B8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:20px] bg-[right_1.25rem_center] bg-no-repeat">
-                        <option value="" disabled selected>Seleccione el técnico...</option>
-                        <option>Adriel Aizpurua</option>
-                        <option>Ellery Mendoza</option>
-                        <option>Axel De Leon</option>
-                    </select>
+                    <span class="admin-label">Nombre del Cliente</span>
+                    <input type="text" id="cliente" required placeholder="Ej: Novey" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
+                    <div id="suggest-cliente" class="suggestion-box hidden absolute w-full bg-white border border-slate-100 rounded-xl shadow-lg z-50 mt-1"></div>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div class="suggestion-wrapper">
-                        <span class="label-style">Nombre del Cliente</span>
-                        <input type="text" id="cliente" autocomplete="off" required placeholder="Buscar cliente..." class="input-premium">
-                        <div id="suggest-cliente" class="suggestion-container"></div>
-                    </div>
-                    <div class="suggestion-wrapper">
-                        <span class="label-style">Número de Serie</span>
-                        <input type="text" id="sn_equipo" autocomplete="off" required placeholder="S/N" class="input-premium">
-                        <div id="suggest-serie" class="suggestion-container"></div>
-                    </div>
+                <div class="relative">
+                    <span class="admin-label">Número de Serie</span>
+                    <input type="text" id="sn_equipo" required placeholder="S/N" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
+                    <div id="suggest-sn" class="suggestion-box hidden absolute w-full bg-white border border-slate-100 rounded-xl shadow-lg z-50 mt-1"></div>
                 </div>
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div class="suggestion-wrapper">
-                        <span class="label-style">Abastecedor CIT</span>
-                        <input type="text" id="abastecedor" autocomplete="off" placeholder="Opcional..." class="input-premium">
-                        <div id="suggest-abastecedor" class="suggestion-container"></div>
-                    </div>
-                    <div class="suggestion-wrapper">
-                        <span class="label-style">Atención A</span>
-                        <input type="text" id="atencion_a" autocomplete="off" placeholder="Recibe..." class="input-premium">
-                        <div id="suggest-atencion" class="suggestion-container"></div>
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="relative">
+                    <span class="admin-label">Abastecedor CIT (Opcional)</span>
+                    <input type="text" id="abastecedor" placeholder="Nombre CIT..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none italic text-slate-500 focus:ring-2 focus:ring-blue-500">
                 </div>
-
-                <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
-                    <span class="label-style text-center mb-5 block">Fallas Concurrentes</span>
-                    <div class="check-group mb-4">
-                        <label class="check-card"><input type="checkbox" name="falla" value="Bolsa no Liberó" class="mr-2"><span>Bolsa no Liberó</span></label>
-                        <label class="check-card"><input type="checkbox" name="falla" value="CIT Caído" class="mr-2"><span>CIT Caído</span></label>
-                        <label class="check-card"><input type="checkbox" name="falla" value="Atasco" class="mr-2"><span>Atasco</span></label>
-                        <label class="check-card"><input type="checkbox" name="falla" value="Bolsa Llena" class="mr-2"><span>Bolsa Llena</span></label>
-                    </div>
+                <div class="relative">
+                    <span class="admin-label">Atención a (Nombre)</span>
+                    <input type="text" id="atencion_a" placeholder="Receptor del soporte..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-medium focus:ring-2 focus:ring-blue-500">
                 </div>
+            </div>
+            
+            <div class="bg-blue-50/40 p-6 rounded-[2rem] border border-blue-100">
+                <p class="text-[10px] font-black text-blue-500 uppercase mb-4 text-center tracking-widest">Fallas Concurrentes</p>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-100 cursor-pointer active:scale-95 transition-transform"><input type="checkbox" name="falla" value="Bolsa no Liberó" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa no Liberó</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-100 cursor-pointer active:scale-95 transition-transform"><input type="checkbox" name="falla" value="CIT Caído" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">CIT Caído</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-100 cursor-pointer active:scale-95 transition-transform"><input type="checkbox" name="falla" value="Atasco" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Atasco</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-blue-100 cursor-pointer active:scale-95 transition-transform"><input type="checkbox" name="falla" value="Bolsa Llena" class="w-4 h-4 text-blue-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase">Bolsa Llena</span></label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-orange-200 cursor-pointer col-span-2 active:scale-95 transition-transform"><input type="checkbox" name="falla" value="Restablecer estado de falla" class="w-4 h-4 text-orange-600 rounded"><span class="text-slate-600 text-[10px] font-bold uppercase text-orange-600">Restablecer estado de falla</span></label>
+                </div>
+                <label class="flex items-center space-x-3 mb-2 cursor-pointer"><input type="checkbox" id="checkOtro" name="falla" value="Otro" class="w-4 h-4 text-orange-500 rounded"><span class="text-slate-500 text-[10px] font-black uppercase">Otra falla específica</span></label>
+                <input type="text" id="detalleOtro" class="hidden w-full p-3 bg-white border border-orange-200 rounded-xl outline-none text-sm" placeholder="Describa el problema...">
+            </div>
 
+            <div class="relative">
+                <span class="admin-label">Resolución del Ticket</span>
+                <textarea id="solucion" rows="3" required placeholder="Detalle la solución técnica..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none resize-none font-medium focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            
+            <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-100 uppercase tracking-widest text-sm active:scale-[0.98] transition-all">Guardar Registro Técnico</button>
+        </form>
+    </div>
+
+    <div id="pin-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white p-10 rounded-[3.5rem] shadow-2xl w-[350px] text-center">
+            <h3 class="text-xl font-black text-slate-800 uppercase tracking-tighter mb-8 italic">Acceso Administrador</h3>
+            
+            <div class="flex justify-center gap-5 mb-10">
+                <div class="pin-dot" id="dot-0"></div>
+                <div class="pin-dot" id="dot-1"></div>
+                <div class="pin-dot" id="dot-2"></div>
+                <div class="pin-dot" id="dot-3"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-5 justify-items-center">
+                <button onclick="pressNum('1')" id="key-1" class="num-btn">1</button>
+                <button onclick="pressNum('2')" id="key-2" class="num-btn">2</button>
+                <button onclick="pressNum('3')" id="key-3" class="num-btn">3</button>
+                
+                <button onclick="pressNum('4')" id="key-4" class="num-btn">4</button>
+                <button onclick="pressNum('5')" id="key-5" class="num-btn">5</button>
+                <button onclick="pressNum('6')" id="key-6" class="num-btn">6</button>
+                
+                <button onclick="pressNum('7')" id="key-7" class="num-btn">7</button>
+                <button onclick="pressNum('8')" id="key-8" class="num-btn">8</button>
+                <button onclick="pressNum('9')" id="key-9" class="num-btn">9</button>
+                
+                <button onclick="clearPin()" class="num-btn bg-red-50 text-red-500 border-red-100"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"></path></svg></button>
+                <button onclick="pressNum('0')" id="key-0" class="num-btn">0</button>
+                <button onclick="closePin()" class="num-btn bg-slate-100 text-slate-400 border-slate-200">✕</button>
+            </div>
+            
+            <p class="mt-8 text-[9px] font-black text-slate-300 uppercase tracking-widest">Soporta teclado numérico</p>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-2 md:p-4">
+        <div class="bg-white w-full max-w-7xl max-h-[96vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
+            <div class="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-white">
                 <div>
-                    <span class="label-style">Resolución del Ticket</span>
-                    <textarea id="solucion" rows="3" required placeholder="Detalle técnico..." class="input-premium resize-none"></textarea>
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tighter italic uppercase">Beta <span class="text-blue-600">Admin</span></h2>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Panel de Control General</p>
+                </div>
+                <button onclick="closeAdmin()" class="bg-slate-100 p-3 rounded-full text-slate-400 hover:text-red-500 transition-all">✕</button>
+            </div>
+            <div class="p-4 md:p-8 overflow-y-auto flex-1 bg-slate-50">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm space-y-5">
+                        <div class="relative">
+                            <span class="admin-label">Filtrar por Técnico</span>
+                            <div id="admin-tech-trigger" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer flex justify-between items-center">
+                                <span id="admin-tech-text" class="text-[10px] font-black text-slate-600 uppercase">Todos los Técnicos</span>
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                            <div id="admin-tech-options" class="custom-options-container hidden">
+                                <div class="option-item" data-value="Todos">TODOS LOS TÉCNICOS</div>
+                                <div class="option-item" data-value="Adriel Aizpurua">ADRIEL AIZPURUA</div>
+                                <div class="option-item" data-value="Ellery Mendoza">ELLERY MENDOZA</div>
+                                <div class="option-item" data-value="Axel De Leon">AXEL DE LEON</div>
+                                <div class="option-item" data-value="Ismael Peñalba">ISMAEL PEÑALBA</div>
+                            </div>
+                        </div>
+                        <div class="bg-blue-600 p-4 rounded-2xl text-center">
+                            <span id="record-count" class="text-3xl font-black text-white">0</span>
+                            <p class="text-[8px] font-black text-blue-100 uppercase mt-1">Total de Casos</p>
+                        </div>
+                        <button onclick="downloadPDF()" class="w-full bg-slate-800 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest hover:bg-black transition-all">Generar PDF</button>
+                    </div>
+                    <div class="lg:col-span-3 bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm min-h-[350px]">
+                        <canvas id="statsChart"></canvas>
+                    </div>
                 </div>
 
-                <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg hover:bg-blue-700 transition-all uppercase tracking-widest text-sm">Guardar Registro</button>
-            </form>
+                <div class="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead class="bg-slate-800 text-white font-black uppercase text-[9px] tracking-widest">
+                                <tr>
+                                    <th class="p-5 table-fixed-col">Fecha / Hora</th>
+                                    <th class="p-5 table-fixed-col">Técnico</th>
+                                    <th class="p-5 table-medium-col">Cliente / Info</th>
+                                    <th class="p-5 table-medium-col">Fallas Detectadas</th>
+                                    <th class="p-5">Solución Técnica</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -177,105 +262,188 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpc3puenplc3l2ZXltbmxmYnBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDU4NTUsImV4cCI6MjA5MDU4MTg1NX0.FItuISXRPOJIXazRPKJbOl1MQ8n3P1McRauPX51nci8';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let cacheData = { clientes: [], series: [], abastecedores: [], atenciones: [] };
+        let myChart = null;
+        let pressTimer;
+        let currentPin = "";
+        const MASTER_PIN = "2026";
+        let currentFilterTech = "Todos";
+        let dataHistory = { clientes: [], seriales: [] };
 
-        // Función para cargar datos únicos desde Supabase
-        async function fetchCache() {
-            try {
-                const { data, error } = await _supabase.from('incidencias').select('cliente, sn_equipo, abastecedor, atencion_a').limit(200);
-                if (data) {
-                    cacheData.clientes = [...new Set(data.map(i => i.cliente).filter(Boolean))];
-                    cacheData.series = [...new Set(data.map(i => i.sn_equipo).filter(Boolean))];
-                    cacheData.abastecedores = [...new Set(data.map(i => i.abastecedor).filter(Boolean))];
-                    cacheData.atenciones = [...new Set(data.map(i => i.atencion_a).filter(Boolean))];
-                }
-            } catch (e) { console.error("Error cargando caché:", e); }
+        function showToast(msg) {
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.innerHTML = `<span class="font-black text-[10px] text-slate-800 uppercase tracking-widest">${msg}</span>`;
+            c.appendChild(t);
+            setTimeout(() => t.classList.add('active'), 10);
+            setTimeout(() => { t.classList.remove('active'); setTimeout(() => t.remove(), 400); }, 3000);
         }
 
-        // Lógica de Autocompletado Mejorada
-        function setupSuggest(inputId, boxId, key) {
-            const input = document.getElementById(inputId);
-            const box = document.getElementById(boxId);
-
-            input.addEventListener('input', () => {
-                const val = input.value.toUpperCase();
-                box.innerHTML = '';
-                
-                if (val.length < 1) { 
-                    box.style.display = 'none'; 
-                    return; 
-                }
-
-                // Filtrar coincidencias
-                const matches = cacheData[key]
-                    .filter(i => i.toUpperCase().includes(val))
-                    .sort((a, b) => a.indexOf(val) - b.indexOf(val)) // Priorizar si empieza con la letra
-                    .slice(0, 6);
-
-                if (matches.length > 0) {
-                    matches.forEach(m => {
-                        const item = document.createElement('div');
-                        item.className = 'suggestion-item';
-                        item.textContent = m;
-                        // Evento al hacer click
-                        item.onmousedown = (e) => {
-                            e.preventDefault();
-                            input.value = m;
-                            box.style.display = 'none';
-                        };
-                        box.appendChild(item);
-                    });
-                    box.style.display = 'block';
-                } else {
-                    box.style.display = 'none';
-                }
-            });
-
-            // Cerrar al perder foco
-            input.addEventListener('blur', () => {
-                setTimeout(() => box.style.display = 'none', 200);
-            });
+        /* --- LOGICA DEL PIN Y TECLADO FISICO --- */
+        function pressNum(n) {
+            if(currentPin.length < 4) {
+                currentPin += n;
+                updatePinDots();
+                if(currentPin.length === 4) setTimeout(validatePin, 200);
+            }
         }
 
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', async () => {
-            document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
-            
-            await fetchCache();
+        function updatePinDots() {
+            for(let i=0; i<4; i++) {
+                document.getElementById(`dot-${i}`).classList.toggle('filled', i < currentPin.length);
+            }
+        }
 
-            // Activar autocompletado en los campos
-            setupSuggest('cliente', 'suggest-cliente', 'clientes');
-            setupSuggest('sn_equipo', 'suggest-serie', 'series');
-            setupSuggest('abastecedor', 'suggest-abastecedor', 'abastecedores');
-            setupSuggest('atencion_a', 'suggest-atencion', 'atenciones');
+        function clearPin() {
+            currentPin = currentPin.slice(0, -1);
+            updatePinDots();
+        }
+
+        function validatePin() {
+            if(currentPin === MASTER_PIN) {
+                closePin();
+                document.getElementById('admin-modal').classList.add('active');
+                loadAdminData();
+            } else {
+                showToast("PIN INCORRECTO");
+                currentPin = "";
+                updatePinDots();
+            }
+        }
+
+        // Listener para teclado Desktop
+        document.addEventListener('keydown', (e) => {
+            const pinModal = document.getElementById('pin-modal');
+            if (!pinModal.classList.contains('active')) return;
+
+            // Números del 0 al 9 (Teclado normal y numérico)
+            if (e.key >= '0' && e.key <= '9') {
+                const btn = document.getElementById(`key-${e.key}`);
+                if(btn) {
+                    btn.classList.add('key-pressed');
+                    setTimeout(() => btn.classList.remove('key-pressed'), 100);
+                }
+                pressNum(e.key);
+            }
+            // Borrar
+            if (e.key === 'Backspace') clearPin();
+            // Cerrar
+            if (e.key === 'Escape') closePin();
         });
 
-        // Manejo del Submit (Igual al original)
+        function closePin() { document.getElementById('pin-modal').classList.remove('active'); currentPin = ""; updatePinDots(); }
+        function closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); }
+
+        /* --- LOGICA DE FORMULARIO Y SELECTS --- */
+        function setupCustomSelect(triggerId, optionsId, textId, hiddenInputId = null, isAdmin = false) {
+            const trigger = document.getElementById(triggerId);
+            const options = document.getElementById(optionsId);
+            const text = document.getElementById(textId);
+
+            trigger.onclick = (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-options-container').forEach(c => { if(c !== options) c.classList.add('hidden'); });
+                options.classList.toggle('hidden');
+            };
+
+            options.querySelectorAll('.option-item').forEach(opt => {
+                opt.onclick = () => {
+                    const val = opt.getAttribute('data-value');
+                    text.innerText = isAdmin ? val.toUpperCase() : val;
+                    if(!isAdmin) text.classList.replace('text-slate-400', 'text-slate-700');
+                    if(hiddenInputId) document.getElementById(hiddenInputId).value = val;
+                    if(isAdmin) { currentFilterTech = val; loadAdminData(); }
+                    options.classList.add('hidden');
+                };
+            });
+        }
+
+        async function loadAdminData() {
+            let query = _supabase.from('incidencias').select('*').order('created_at', { ascending: false });
+            if (currentFilterTech !== "Todos") query = query.eq('tecnico', currentFilterTech);
+            const { data } = await query;
+            const tbody = document.getElementById('table-body');
+            document.getElementById('record-count').innerText = data ? data.length : 0;
+            updateChart(data || []);
+            
+            tbody.innerHTML = (data || []).map(row => {
+                const hora = new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                return `
+                <tr class="hover:bg-slate-50 border-b border-slate-50">
+                    <td class="p-5 align-top"><div class="font-black text-blue-600 text-[10px]">${row.fecha_manual}</div><div class="text-[9px] font-bold text-slate-400">${hora}</div></td>
+                    <td class="p-5 align-top font-bold text-slate-700 text-[10px] uppercase">${row.tecnico}</td>
+                    <td class="p-5 align-top">
+                        <div class="font-black text-slate-800 text-[10px] uppercase mb-1">${row.cliente}</div>
+                        <div class="text-[9px] text-slate-400 font-bold mb-1">S/N: ${row.sn_equipo}</div>
+                        ${row.abastecedor ? `<span class="bg-orange-100 text-orange-600 text-[8px] px-2 py-0.5 rounded font-black uppercase mr-2">CIT: ${row.abastecedor}</span>` : ''}
+                        ${row.atencion_a ? `<div class="mt-1 text-[8px] font-black text-blue-500 uppercase italic">Atención a: ${row.atencion_a}</div>` : ''}
+                    </td>
+                    <td class="p-5 align-top"><div class="flex flex-wrap gap-1">${row.fallas.map(f => `<span class="bg-blue-50 text-blue-600 text-[8px] px-2 py-0.5 rounded font-bold uppercase border border-blue-100">${f}</span>`).join('')}</div></td>
+                    <td class="p-5 align-top text-[10px] font-medium text-slate-500 leading-tight">${row.solucion}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function updateChart(data) {
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            const counts = {}; data.forEach(r => counts[r.tecnico] = (counts[r.tecnico] || 0) + 1);
+            if(myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: Object.keys(counts), datasets: [{ label: 'Tickets', data: Object.values(counts), backgroundColor: '#2563eb', borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        async function downloadPDF() {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
+            const { data } = await _supabase.from('incidencias').select('*').order('created_at', {ascending: false});
+            doc.text("REPORTE BETA TICKET - CONTROL DE CALIDAD", 14, 15);
+            doc.autoTable({ head: [['Fecha', 'Técnico', 'Cliente', 'Info', 'Fallas', 'Solución']], body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, `Atención: ${r.atencion_a || 'N/A'}`, r.fallas.join(", "), r.solucion]), theme: 'grid', headStyles: { fillColor: [30, 41, 59] } });
+            doc.save(`Reporte_Beta_Tickets.pdf`);
+        }
+
+        // Eventos de inicio
+        document.getElementById('logo-btn').addEventListener('mousedown', () => pressTimer = setTimeout(() => { document.getElementById('pin-modal').classList.add('active'); }, 1500));
+        document.getElementById('logo-btn').addEventListener('mouseup', () => clearTimeout(pressTimer));
+        document.getElementById('logo-btn').addEventListener('touchstart', () => pressTimer = setTimeout(() => { document.getElementById('pin-modal').classList.add('active'); }, 1500));
+        document.getElementById('logo-btn').addEventListener('touchend', () => clearTimeout(pressTimer));
+
         document.getElementById('incidentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btnSubmit');
-            btn.disabled = true; btn.innerText = 'GUARDANDO...';
+            const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = 'GUARDANDO...';
+            const detailOtro = document.getElementById('detalleOtro');
+            const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => (el.value === 'Otro') ? `OTRO: ${detailOtro.value}` : el.value);
 
-            const fallas = Array.from(document.querySelectorAll('input[name="falla"]:checked')).map(el => el.value);
-
-            const { error } = await _supabase.from('incidencias').insert([{
+            const payload = {
                 tecnico: document.getElementById('tecnico').value,
-                cliente: document.getElementById('cliente').value.toUpperCase(),
-                sn_equipo: document.getElementById('sn_equipo').value.toUpperCase(),
-                abastecedor: document.getElementById('abastecedor').value.toUpperCase() || null,
-                atencion_a: document.getElementById('atencion_a').value.toUpperCase() || null,
+                cliente: document.getElementById('cliente').value,
+                sn_equipo: document.getElementById('sn_equipo').value,
+                abastecedor: document.getElementById('abastecedor').value || null,
+                atencion_a: document.getElementById('atencion_a').value || null,
                 fallas: fallas,
-                solucion: document.getElementById('solucion').value.toUpperCase(),
+                solucion: document.getElementById('solucion').value,
                 fecha_manual: document.getElementById('fecha_atencion').value
-            }]);
+            };
 
-            if (!error) {
-                alert("✓ REGISTRO EXITOSO");
-                location.reload();
-            } else {
-                alert("Error: " + error.message);
-                btn.disabled = false; btn.innerText = 'Guardar Registro';
+            const { error } = await _supabase.from('incidencias').insert([payload]);
+            if(!error) { 
+                showToast("REGISTRO EXITOSO"); 
+                e.target.reset(); 
+                document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
+                document.getElementById('form-tech-text').innerText = "Seleccione el técnico...";
+                document.getElementById('form-tech-text').classList.replace('text-slate-700', 'text-slate-400');
             }
+            btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO TÉCNICO';
+        });
+
+        document.addEventListener('click', () => { document.querySelectorAll('.custom-options-container').forEach(c => c.classList.add('hidden')); });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
+            document.getElementById('checkOtro').addEventListener('change', (e) => document.getElementById('detalleOtro').classList.toggle('hidden', !e.target.checked));
+            setupCustomSelect('form-tech-trigger', 'form-tech-options', 'form-tech-text', 'tecnico', false);
+            setupCustomSelect('admin-tech-trigger', 'admin-tech-options', 'admin-tech-text', null, true);
         });
     </script>
 </body>
