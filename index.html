@@ -14,13 +14,12 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* Bloqueo de selección para el logo */
         .no-select {
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
-            -webkit-touch-callout: none; /* Bloquea el menú contextual en iOS */
+            -webkit-touch-callout: none;
         }
 
         .glass-card { background: white; transition: all 0.3s ease; }
@@ -228,6 +227,15 @@
         let currentFilterTech = "Todos";
         let dataHistory = { clientes: [], seriales: [], abastecedores: [] };
 
+        // --- CORRECCIÓN DE FECHA LOCAL ---
+        function getLocalISODate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         function showToast(msg) {
             const c = document.getElementById('toast-container');
             const t = document.createElement('div');
@@ -354,13 +362,19 @@
                 fecha_manual: document.getElementById('fecha_atencion').value
             };
             const { error } = await _supabase.from('incidencias').insert([payload]);
-            if(!error) { showToast("TICKET GUARDADO CORRECTAMENTE"); e.target.reset(); document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0]; document.getElementById('form-tech-text').innerText = "Seleccione el técnico..."; fetchHistory(); } else { alert("Error al guardar: " + error.message); }
+            if(!error) { 
+                showToast("TICKET GUARDADO CORRECTAMENTE"); 
+                e.target.reset(); 
+                document.getElementById('fecha_atencion').value = getLocalISODate(); // Reset a fecha local
+                document.getElementById('form-tech-text').innerText = "Seleccione el técnico..."; 
+                fetchHistory(); 
+            } else { alert("Error al guardar: " + error.message); }
             btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO TÉCNICO';
         });
 
         document.addEventListener('click', () => { document.querySelectorAll('.custom-options-container, .suggestion-box').forEach(c => c.classList.add('hidden')); });
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('fecha_atencion').value = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha_atencion').value = getLocalISODate(); // Carga inicial fecha local
             document.getElementById('checkOtro').addEventListener('change', (e) => document.getElementById('detalleOtro').classList.toggle('hidden', !e.target.checked));
             setupCustomSelect('form-tech-trigger', 'form-tech-options', 'form-tech-text', 'tecnico', false);
             setupCustomSelect('admin-tech-trigger', 'admin-tech-options', 'admin-tech-text', null, true);
