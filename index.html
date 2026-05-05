@@ -173,8 +173,30 @@
                             </div>
                         </div>
 
+                        <div class="relative">
+                            <span class="admin-label">Filtrar por Mes</span>
+                            <div id="admin-month-trigger" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer flex justify-between items-center">
+                                <span id="admin-month-text" class="text-[10px] font-black text-slate-600 uppercase italic">Seleccionar Mes</span>
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                            </div>
+                            <div id="admin-month-options" class="custom-options-container hidden">
+                                <div class="option-item" data-month="0">Enero</div>
+                                <div class="option-item" data-month="1">Febrero</div>
+                                <div class="option-item" data-month="2">Marzo</div>
+                                <div class="option-item" data-month="3">Abril</div>
+                                <div class="option-item" data-month="4">Mayo</div>
+                                <div class="option-item" data-month="5">Junio</div>
+                                <div class="option-item" data-month="6">Julio</div>
+                                <div class="option-item" data-month="7">Agosto</div>
+                                <div class="option-item" data-month="8">Septiembre</div>
+                                <div class="option-item" data-month="9">Octubre</div>
+                                <div class="option-item" data-month="10">Noviembre</div>
+                                <div class="option-item" data-month="11">Diciembre</div>
+                            </div>
+                        </div>
+
                         <div class="space-y-3">
-                            <span class="admin-label">Rango de Fechas</span>
+                            <span class="admin-label">Rango Manual de Fechas</span>
                             <div class="grid grid-cols-1 gap-2">
                                 <input type="date" id="filtro_desde" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600 outline-none">
                                 <input type="date" id="filtro_hasta" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600 outline-none">
@@ -227,7 +249,6 @@
         let currentFilterTech = "Todos";
         let dataHistory = { clientes: [], seriales: [], abastecedores: [] };
 
-        // --- CORRECCIÓN DE FECHA LOCAL ---
         function getLocalISODate() {
             const now = new Date();
             const year = now.getFullYear();
@@ -250,7 +271,15 @@
             const trigger = document.getElementById(triggerId);
             const options = document.getElementById(optionsId);
             const text = document.getElementById(textId);
-            trigger.onclick = (e) => { e.stopPropagation(); options.classList.toggle('hidden'); };
+            
+            trigger.onclick = (e) => { 
+                e.stopPropagation(); 
+                document.querySelectorAll('.custom-options-container').forEach(c => {
+                    if(c.id !== optionsId) c.classList.add('hidden');
+                });
+                options.classList.toggle('hidden'); 
+            };
+
             options.querySelectorAll('.option-item').forEach(opt => {
                 opt.onclick = () => {
                     const val = opt.getAttribute('data-value');
@@ -258,6 +287,41 @@
                     if(hiddenInputId) document.getElementById(hiddenInputId).value = val;
                     if(isAdmin) { currentFilterTech = val; loadAdminData(); }
                     options.classList.add('hidden');
+                };
+            });
+        }
+
+        // Nueva función para el selector de Mes
+        function setupMonthSelect() {
+            const trigger = document.getElementById('admin-month-trigger');
+            const options = document.getElementById('admin-month-options');
+            const text = document.getElementById('admin-month-text');
+
+            trigger.onclick = (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-options-container').forEach(c => {
+                    if(c.id !== 'admin-month-options') c.classList.add('hidden');
+                });
+                options.classList.toggle('hidden');
+            };
+
+            options.querySelectorAll('.option-item').forEach(opt => {
+                opt.onclick = () => {
+                    const month = parseInt(opt.getAttribute('data-month'));
+                    const year = new Date().getFullYear();
+                    
+                    const firstDay = new Date(year, month, 1);
+                    const lastDay = new Date(year, month + 1, 0);
+
+                    // Formatear a YYYY-MM-DD para los inputs
+                    const format = (d) => d.toISOString().split('T')[0];
+                    
+                    document.getElementById('filtro_desde').value = format(firstDay);
+                    document.getElementById('filtro_hasta').value = format(lastDay);
+                    text.innerText = opt.innerText.toUpperCase();
+                    
+                    options.classList.add('hidden');
+                    loadAdminData(); // Cargar automáticamente al seleccionar mes
                 };
             });
         }
@@ -312,10 +376,12 @@
             const hasta = document.getElementById('filtro_hasta').value;
             if (desde) query = query.gte('fecha_manual', desde);
             if (hasta) query = query.lte('fecha_manual', hasta);
+            
             const { data } = await query;
             const tbody = document.getElementById('table-body');
             document.getElementById('record-count').innerText = data ? data.length : 0;
             updateChart(data || []);
+            
             if (!data || data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold uppercase text-[10px]">Sin registros</td></tr>`;
                 return;
@@ -365,7 +431,7 @@
             if(!error) { 
                 showToast("TICKET GUARDADO CORRECTAMENTE"); 
                 e.target.reset(); 
-                document.getElementById('fecha_atencion').value = getLocalISODate(); // Reset a fecha local
+                document.getElementById('fecha_atencion').value = getLocalISODate();
                 document.getElementById('form-tech-text').innerText = "Seleccione el técnico..."; 
                 fetchHistory(); 
             } else { alert("Error al guardar: " + error.message); }
@@ -373,11 +439,17 @@
         });
 
         document.addEventListener('click', () => { document.querySelectorAll('.custom-options-container, .suggestion-box').forEach(c => c.classList.add('hidden')); });
+        
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('fecha_atencion').value = getLocalISODate(); // Carga inicial fecha local
+            document.getElementById('fecha_atencion').value = getLocalISODate();
             document.getElementById('checkOtro').addEventListener('change', (e) => document.getElementById('detalleOtro').classList.toggle('hidden', !e.target.checked));
+            
             setupCustomSelect('form-tech-trigger', 'form-tech-options', 'form-tech-text', 'tecnico', false);
             setupCustomSelect('admin-tech-trigger', 'admin-tech-options', 'admin-tech-text', null, true);
+            
+            // Inicializar nuevo selector de mes
+            setupMonthSelect();
+            
             fetchHistory();
             setupSuggestions('cliente', 'suggest-cliente', 'clientes');
             setupSuggestions('sn_equipo', 'suggest-sn', 'seriales');
