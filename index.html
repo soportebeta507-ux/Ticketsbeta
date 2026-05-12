@@ -25,9 +25,9 @@
         .glass-card { background: white; transition: all 0.3s ease; }
         #admin-modal, #pin-modal { display: none; opacity: 0; transition: all 0.3s ease; z-index: 100; }
         #admin-modal.active, #pin-modal.active { display: flex; opacity: 1; }
-        .pin-dot { width: 16px; height: 16px; border: 2px solid #e2e8f0; border-radius: 9999px; transition: all 0.2s; }
+        .pin-dot { width: 16px; height: 16px; border: 2px solid #e2e8f0; border-radius: 9999px; transition: all 0.2; }
         .pin-dot.filled { background-color: #2563eb; border-color: #2563eb; transform: scale(1.2); }
-        .num-btn { width: 70px; height: 70px; border-radius: 9999px; background: #f8fafc; font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; justify-content: center; transition: all 0.1s; border: 1px solid #f1f5f9; }
+        .num-btn { width: 70px; height: 70px; border-radius: 9999px; background: #f8fafc; font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; justify-content: center; transition: all 0.1s; border: 1px solid #f1f5f9; cursor: pointer; }
         .num-btn:active { background: #e2e8f0; transform: scale(0.9); }
         .custom-options-container { position: absolute; top: 105%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 1.25rem; max-height: 250px; overflow-y: auto; z-index: 150; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
         .option-item { padding: 1rem; cursor: pointer; font-size: 11px; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; }
@@ -127,11 +127,13 @@
         </form>
     </div>
 
+    <!-- MODAL PIN -->
     <div id="pin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-4">
         <div class="bg-white/90 p-10 rounded-[3.5rem] shadow-2xl w-full max-w-[380px]">
             <div class="text-center mb-8">
                 <h3 class="text-2xl font-black text-slate-800 uppercase">Panel Admin</h3>
                 <p class="text-[10px] font-bold text-slate-400 uppercase mt-1">Ingresa el PIN</p>
+                <p class="text-[8px] font-medium text-slate-300 uppercase mt-2">Usa el teclado de tu laptop</p>
             </div>
             <div class="flex justify-center gap-5 mb-10">
                 <div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div><div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div>
@@ -145,6 +147,7 @@
         </div>
     </div>
 
+    <!-- MODAL ADMIN -->
     <div id="admin-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-2">
         <div class="bg-white w-full max-w-7xl max-h-[96vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
@@ -249,6 +252,48 @@
         let currentFilterTech = "Todos";
         let dataHistory = { clientes: [], seriales: [], abastecedores: [] };
 
+        // --- CONTROL DE PIN Y TECLADO ---
+        
+        function pressNum(n) { 
+            if(currentPin.length < 4) { 
+                currentPin += n; 
+                updatePinDots(); 
+                if(currentPin.length === 4) setTimeout(validatePin, 200); 
+            } 
+        }
+
+        function updatePinDots() { 
+            for(let i=0; i<4; i++) {
+                document.getElementById(`dot-${i}`).classList.toggle('filled', i < currentPin.length); 
+            }
+        }
+
+        function clearPin() { currentPin = ""; updatePinDots(); }
+        function closePin() { document.getElementById('pin-modal').classList.remove('active'); currentPin = ""; updatePinDots(); }
+
+        function validatePin() { 
+            if(currentPin === MASTER_PIN) { 
+                closePin(); 
+                document.getElementById('admin-modal').classList.add('active'); 
+                loadAdminData(); 
+            } else { 
+                alert("PIN INCORRECTO"); 
+                clearPin(); 
+            } 
+        }
+
+        // Listener Teclado Físico
+        document.addEventListener('keydown', (e) => {
+            const pinModal = document.getElementById('pin-modal');
+            if (pinModal.classList.contains('active')) {
+                if (e.key >= '0' && e.key <= '9') pressNum(e.key);
+                if (e.key === 'Backspace') clearPin();
+                if (e.key === 'Escape') closePin();
+            }
+        });
+
+        // --- UTILIDADES ---
+
         function getLocalISODate() {
             const now = new Date();
             const year = now.getFullYear();
@@ -291,7 +336,6 @@
             });
         }
 
-        // Nueva función para el selector de Mes
         function setupMonthSelect() {
             const trigger = document.getElementById('admin-month-trigger');
             const options = document.getElementById('admin-month-options');
@@ -309,19 +353,14 @@
                 opt.onclick = () => {
                     const month = parseInt(opt.getAttribute('data-month'));
                     const year = new Date().getFullYear();
-                    
                     const firstDay = new Date(year, month, 1);
                     const lastDay = new Date(year, month + 1, 0);
-
-                    // Formatear a YYYY-MM-DD para los inputs
                     const format = (d) => d.toISOString().split('T')[0];
-                    
                     document.getElementById('filtro_desde').value = format(firstDay);
                     document.getElementById('filtro_hasta').value = format(lastDay);
                     text.innerText = opt.innerText.toUpperCase();
-                    
                     options.classList.add('hidden');
-                    loadAdminData(); // Cargar automáticamente al seleccionar mes
+                    loadAdminData();
                 };
             });
         }
@@ -347,6 +386,8 @@
             });
         }
 
+        // --- DATA & ACTIONS ---
+
         async function fetchHistory() {
             const { data } = await _supabase.from('incidencias').select('cliente, sn_equipo, abastecedor');
             if (data) {
@@ -362,11 +403,6 @@
         logoBtn.addEventListener('touchstart', (e) => { e.preventDefault(); pressTimer = setTimeout(() => { currentPin = ""; updatePinDots(); document.getElementById('pin-modal').classList.add('active'); }, 2000); });
         logoBtn.addEventListener('touchend', () => clearTimeout(pressTimer));
 
-        function pressNum(n) { if(currentPin.length < 4) { currentPin += n; updatePinDots(); if(currentPin.length === 4) setTimeout(validatePin, 200); } }
-        function updatePinDots() { for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).classList.toggle('filled', i < currentPin.length); }
-        function clearPin() { currentPin = ""; updatePinDots(); }
-        function closePin() { document.getElementById('pin-modal').classList.remove('active'); }
-        function validatePin() { if(currentPin === MASTER_PIN) { closePin(); document.getElementById('admin-modal').classList.add('active'); loadAdminData(); } else { alert("PIN INCORRECTO"); clearPin(); } }
         function closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); }
 
         async function loadAdminData() {
@@ -407,8 +443,16 @@
             if (desde) query = query.gte('fecha_manual', desde);
             if (hasta) query = query.lte('fecha_manual', hasta);
             const { data } = await query;
+            doc.setFontSize(16);
             doc.text("REPORTE BETA TICKET - CONTROL DE CALIDAD", 14, 15);
-            doc.autoTable({ head: [['Fecha', 'Técnico', 'Cliente', 'Info', 'Atención a', 'Fallas', 'Solución']], body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, `S/N: ${r.sn_equipo}`, r.atencion_a || '-', r.fallas.join(", "), r.solucion]), theme: 'grid', headStyles: { fillColor: [30, 41, 59] } });
+            doc.autoTable({ 
+                startY: 20,
+                head: [['Fecha', 'Técnico', 'Cliente', 'Info', 'Atención a', 'Fallas', 'Solución']], 
+                body: data.map(r => [r.fecha_manual, r.tecnico, r.cliente, `S/N: ${r.sn_equipo}`, r.atencion_a || '-', r.fallas.join(", "), r.solucion]), 
+                theme: 'grid', 
+                headStyles: { fillColor: [30, 41, 59] },
+                styles: { fontSize: 8 }
+            });
             doc.save(`Reporte_Beta_Tickets.pdf`);
         }
 
@@ -438,7 +482,9 @@
             btn.disabled = false; btn.innerText = 'GUARDAR REGISTRO TÉCNICO';
         });
 
-        document.addEventListener('click', () => { document.querySelectorAll('.custom-options-container, .suggestion-box').forEach(c => c.classList.add('hidden')); });
+        document.addEventListener('click', () => { 
+            document.querySelectorAll('.custom-options-container, .suggestion-box').forEach(c => c.classList.add('hidden')); 
+        });
         
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('fecha_atencion').value = getLocalISODate();
@@ -447,9 +493,7 @@
             setupCustomSelect('form-tech-trigger', 'form-tech-options', 'form-tech-text', 'tecnico', false);
             setupCustomSelect('admin-tech-trigger', 'admin-tech-options', 'admin-tech-text', null, true);
             
-            // Inicializar nuevo selector de mes
             setupMonthSelect();
-            
             fetchHistory();
             setupSuggestions('cliente', 'suggest-cliente', 'clientes');
             setupSuggestions('sn_equipo', 'suggest-sn', 'seriales');
